@@ -6,7 +6,8 @@ import sphero_mini
 # CONSTANTS
 CANDY_TIME = 2
 BUBBLE_TIME = 2
-
+ROLL_TIME = 10
+ROLL_STEP_TIME = 0.5
 
 # Trick or Treat object to handle devices
 class TrickOrTreat():
@@ -28,11 +29,11 @@ class TrickOrTreat():
     def trick_sphero(self):
         start_time = time.time()
         self.sphero.setLEDColor(red=255, green=0, blue=0)
-        
-        self.sphero.roll(100, 45)
-        self.sphero.wait(3)
-        self.sphero.roll(0, 0)
-        self.sphero.wait(1)
+        while(time.time() - start_time < ROLL_TIME):
+            self.sphero.roll(100, 45)
+            self.sphero.wait(ROLL_STEP_TIME)
+            self.sphero.roll(0, 0)
+            self.sphero.wait(1)
         self.sphero.setLEDColor(red=0, green=0, blue=255)
     
     def run(self):
