@@ -8,6 +8,7 @@ CANDY_TIME = 2
 BUBBLE_TIME = 2
 ROLL_TIME = 10
 ROLL_STEP_TIME = 0.5
+SPHERO_SPEED = 100  # Int 0 - 255
 
 # Trick or Treat object to handle devices
 class TrickOrTreat():
@@ -26,14 +27,20 @@ class TrickOrTreat():
         self.sphero = sphero_mini.sphero_mini(sphero_mac)
         # Setup other tricks
 
-    def trick_sphero(self):
-        start_time = time.time()
+    def _bubble_trick(self):
+        self.bubble_motor.forward()
+        self.bubble_led.on()
+        time.sleep(BUBBLE_TIME)
+        self.bubble_motor.stop()
+        self.bubble_led.off()
+    
+    def _sphero_trick(self):
         self.sphero.setLEDColor(red=255, green=0, blue=0)
-        while(time.time() - start_time < ROLL_TIME):
-            self.sphero.roll(100, 45)
+        for i in range(ROLL_TIME // ROLL_STEP_TIME):
+            self.sphero.roll(SPHERO_SPEED, 360 * i * ROLL_STEP_TIME / ROLL_TIME)
             self.sphero.wait(ROLL_STEP_TIME)
-            self.sphero.roll(0, 0)
-            self.sphero.wait(1)
+        self.sphero.roll(0, 0)
+        self.sphero.wait(1)
         self.sphero.setLEDColor(red=0, green=0, blue=255)
     
     def run(self):
@@ -48,11 +55,6 @@ class TrickOrTreat():
                 self.candy_led.off()
             elif self.bubble_button.is_pressed:
                 print("bubble button pressed")
-                self.bubble_motor.forward()
-                self.bubble_led.on()
-                time.sleep(BUBBLE_TIME)
-                self.bubble_motor.stop()
-                self.bubble_led.off()
             else:
                 # Don't run too fast
                 time.sleep(0.01)
@@ -61,8 +63,9 @@ class TrickOrTreat():
         pass
 
 if __name__ == '__main__':
+    sphero_mac = sys.argv[1]
     print("Welcome trick or treaters")
-    trick_or_treat = TrickOrTreat()
+    trick_or_treat = TrickOrTreat(sphero_mac)
     try:
         trick_or_treat.run()
     except KeyboardInterrupt:
