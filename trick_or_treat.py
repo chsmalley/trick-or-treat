@@ -1,14 +1,16 @@
 import sys
-from gpiozero import Motor, Button
+from gpiozero import Motor, Button, LED
 import time
 
-CANDY_TIME = 2
-BUBBLE_TIME = 2
+CANDY_TIME = 4
+BUBBLE_TIME = 1.0
+CANDY_SPEED = 0.9
+BUBBLE_SPEED = 1.0
 
 def trick_or_treat():
     # Setup motors
-    candy_motor = Motor(forward=4, backward=14)
-    bubble_motor = Motor(forward=17, backward=27)
+    candy_motor = Motor(forward=23, backward=24)
+    bubble_motor = Motor(forward=27, backward=17)
     # Setup buttons
     candy_button = Button(2)
     bubble_button = Button(3)
@@ -20,15 +22,20 @@ def trick_or_treat():
         while True:
             if candy_button.is_pressed:
                 print("candy button pressed")
-                candy_motor.forward()
                 candy_led.on()
-                time.sleep(CANDY_TIME)
+                for _ in range(CANDY_TIME):
+                    candy_motor.forward(CANDY_SPEED)
+                    time.sleep(1)
+                    candy_motor.backward(CANDY_SPEED)
+                    time.sleep(0.1)
                 candy_motor.stop()
                 candy_led.off()
             elif bubble_button.is_pressed:
                 print("bubble button pressed")
-                bubble_motor.forward()
                 bubble_led.on()
+                bubble_motor.backward(BUBBLE_SPEED)
+                time.sleep(BUBBLE_TIME)
+                bubble_motor.forward(BUBBLE_SPEED)
                 time.sleep(BUBBLE_TIME)
                 bubble_motor.stop()
                 bubble_led.off()
