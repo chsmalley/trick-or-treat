@@ -8,20 +8,18 @@ import random
 TREAT_TIME = 2
 BUBBLE_TIME = 2
 LADDER_TIME = 10
-ROLL_TIME = 5
-ROLL_STEP_TIME = 0.1
+ROLL_TIME = 3
+ROLL_STEP_TIME = 0.01
 BUTTON_PRESS_DELAY = 0.1
 BIRD_TIME = 3
 CAR_DRIVE_TIME = 3
 SPHERO_SPEED = 100  # Int 0 - 255
-TRICKS = (
+TRICKS = [
     "BUBBLE",
     "BIRD",
-    "SPHERO",
     "LADDER",
     "LIGHTS",
-    "BIRD",
-)
+]
 # GPIO PINS
 TREAT_BUTTON_PIN = 2
 BUBBLE_BUTTON_PIN = 3
@@ -53,7 +51,11 @@ class TrickOrTreat():
         self.treat_led = LED(TREAT_LED_PIN)
         self.bubble_led = LED(BUBBLE_LED_PIN)
         # Setup sphero ball
-        self.sphero = sphero_mini.sphero_mini(sphero_mac)
+        if sphero_mac:
+            self.sphero = sphero_mini.sphero_mini(sphero_mac)
+            TRICKS.append("SPHERO")
+        else:
+            self.sphero = None
         # Setup other tricks
         self.jacobs_ladder = DigitalOutputDevice(LADDER_PIN)
         self.lights = DigitalOutputDevice(LIGHTS_PIN)
@@ -99,10 +101,20 @@ class TrickOrTreat():
         time.sleep(CAR_DRIVE_TIME)
         self.car_backward.off()
 
+    def _sphero_trick2(self):
+        self.sphero.setLEDColor(red=255, green=0, blue=0)
+        for i in range(int(ROLL_TIME // ROLL_STEP_TIME)):
+            self.sphero.roll(SPHERO_SPEED, int(360 * i * ROLL_STEP_TIME / ROLL_TIME))
+            self.sphero.wait(ROLL_STEP_TIME)
+        self.sphero.roll(0, 0)
+        self.sphero.wait(1)
+        self.sphero.setLEDColor(red=0, green=0, blue=255)
+
     def _sphero_trick(self):
         self.sphero.setLEDColor(red=255, green=0, blue=0)
-        for i in range(ROLL_TIME // ROLL_STEP_TIME):
-            self.sphero.roll(SPHERO_SPEED, 360 * i * ROLL_STEP_TIME / ROLL_TIME)
+        start_time = time.time()
+        while (time.time() - start_time) < ROLL_TIME:
+            self.sphero.roll(SPHERO_SPEED, random.randint(0, 360))
             self.sphero.wait(ROLL_STEP_TIME)
         self.sphero.roll(0, 0)
         self.sphero.wait(1)
@@ -136,6 +148,8 @@ class TrickOrTreat():
                     self._ladder_trick()
                 elif trick == "LIGHTS":
                     self._lights_trick()
+                elif trick == "BIRD":
+                    self._bird_trick()
                 else:
                     print(f"Unknown trick: {trick}")
             else:
@@ -144,14 +158,18 @@ class TrickOrTreat():
 
     def stop(self):
         self.running = False
+        if self.sphero is not None:
+            self.sphero.disconnect()
 
 if __name__ == '__main__':
-    sphero_mac = sys.argv[1]
+    # EB:B6:31:82:7C:F0
+    # sphero_mac = sys.argv[1]
+    sphero_mac = "EB:B6:31:82:7C:F0"
     print("Welcome trick or treaters")
     trick_or_treat = TrickOrTreat(sphero_mac)
     try:
         trick_or_treat.run()
     except KeyboardInterrupt:
         trick_or_treat.stop()
-    print("goodbye")
+    print("\ngoodbye")
 
