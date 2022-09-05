@@ -18,9 +18,9 @@ CAR_DRIVE_TIME = 3
 SPHERO_SPEED = 100  # Int 0 - 255
 TRICKS = [
     "BUBBLE",
-    "BIRD",
+    # "BIRD",
     "LADDER",
-    # "SINGING",
+    "SINGING",
     # "SPHERO"
 ]
 # GPIO PINS
@@ -33,11 +33,11 @@ TREAT_MOTOR_BACKWARD_PIN = 27
 # BUBBLE_MOTOR_FORWARD_PIN = 27
 # BUBBLE_MOTOR_BACKWARD_PIN = 17
 BUBBLE_SWITCH = 5
-# SINGING_SWITCH = 6
+SINGING_SWITCH = 6
 LADDER_PIN_ON = 26
 LADDER_PIN_OFF = 19
-# BIRD_PIN = 13
-BIRD_PIN = 6
+BIRD_PIN = 13
+# BIRD_PIN = 6
 # CAR_FORWARD_PIN = 6
 # CAR_BACKWARD_PIN = 5
 
@@ -66,16 +66,13 @@ class TrickOrTreat():
         else:
             self.sphero = None
         # Setup other tricks
-        self.jacobs_ladder_on = DigitalOutputDevice(LADDER_PIN_ON)
-        self.jacobs_ladder_on.on()
-        self.jacobs_ladder_off = DigitalOutputDevice(LADDER_PIN_OFF)
-        self.jacobs_ladder_off.on()
-        self.bird = DigitalOutputDevice(BIRD_PIN)
-        self.bird.on()
-        self.bubble_switch = DigitalOutputDevice(BUBBLE_SWITCH)
-        self.bubble_switch.on()
-        # self.car_forward = DigitalOutputDevice(CAR_FORWARD_PIN)
-        # self.car_backward = DigitalOutputDevice(CAR_BACKWARD_PIN)
+        self.jacobs_ladder_on = DigitalOutputDevice(LADDER_PIN_ON, active_high=False)
+        self.jacobs_ladder_off = DigitalOutputDevice(LADDER_PIN_OFF, active_high=False)
+        self.bird = DigitalOutputDevice(BIRD_PIN, active_high=False)
+        self.singing = DigitalOutputDevice(BIRD_PIN, active_high=False)
+        self.bubble_switch = DigitalOutputDevice(BUBBLE_SWITCH, active_high=False)
+        # self.car_forward = DigitalOutputDevice(CAR_FORWARD_PIN, active_high=False)
+        # self.car_backward = DigitalOutputDevice(CAR_BACKWARD_PIN, active_high=False)
         # Setup tricks thread
         self.trick_thread = threading.Thread(target=self._handle_tricks)
         # Setup treats thread
@@ -97,39 +94,38 @@ class TrickOrTreat():
                 self._sphero_trick()
             elif trick == "LADDER":
                 self._ladder_trick()
+            elif trick == "SINGING":
+                self._singing_trick()
             elif trick == "BIRD":
                 self._bird_trick()
             else:
                 print(f"Unknown trick: {trick}")
             
     def _bubble_trick(self):
-        # self.bubble_motor.forward()
-        # self.bubble_led.on()
-        self.bubble_switch.off()
-        time.sleep(BUBBLE_TIME)
         self.bubble_switch.on()
-        # self.bubble_motor.stop()
-        # self.bubble_led.off()
+        time.sleep(BUBBLE_TIME)
+        self.bubble_switch.off()
 
     def _ladder_trick(self):
-        self.jacobs_ladder_on.off()
-        time.sleep(BUTTON_PRESS_DELAY)
         self.jacobs_ladder_on.on()
-        time.sleep(LADDER_TIME)
-        self.jacobs_ladder_off.off()
         time.sleep(BUTTON_PRESS_DELAY)
-        self.jacobs_ladder_off.on()
-
-    def _lights_trick(self):
-        self.lights.on()
+        self.jacobs_ladder_on.off()
         time.sleep(LADDER_TIME)
-        self.lights.off()
+        self.jacobs_ladder_off.on()
+        time.sleep(BUTTON_PRESS_DELAY)
+        self.jacobs_ladder_off.off()
+
+    def _singing_trick(self):
+        # Need to mimic pressing remote control button
+        self.singing.on()
+        time.sleep(BUTTON_PRESS_DELAY)
+        self.singing.off()
 
     def _bird_trick(self):
         # Need to mimic pressing remote control button
-        self.bird.off()
-        time.sleep(BUTTON_PRESS_DELAY)
         self.bird.on()
+        time.sleep(BUTTON_PRESS_DELAY)
+        self.bird.off()
         # time.sleep(BIRD_TIME)
         # Mimic button press again
         # self.bird.on()
