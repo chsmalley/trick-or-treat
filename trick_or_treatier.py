@@ -5,6 +5,7 @@ import sphero_mini
 import random
 import threading
 import queue
+from itertools import cycle
 
 # CONSTANTS
 TREAT_TIME = .5
@@ -16,6 +17,7 @@ BUTTON_PRESS_DELAY = 0.1
 BIRD_TIME = 3
 CAR_DRIVE_TIME = 3
 SPHERO_SPEED = 100  # Int 0 - 255
+CANDY_SPEED = 0.5
 TRICKS = [
     "BUBBLE",
     # "BIRD",
@@ -56,6 +58,8 @@ class TrickOrTreat():
         # Setup buttons
         self.treat_button = Button(TREAT_BUTTON_PIN)
         self.bubble_button = Button(BUBBLE_BUTTON_PIN)
+        self.prev_bubble_button = False
+        self.prev_treat_button = False
         # Setup LEDs
         self.treat_led = LED(TREAT_LED_PIN)
         self.bubble_led = LED(BUBBLE_LED_PIN)
@@ -65,6 +69,7 @@ class TrickOrTreat():
             TRICKS.append("SPHERO")
         else:
             self.sphero = None
+        self.tricks = cycle(TRICKS)
         # Setup other tricks
         self.jacobs_ladder_on = DigitalOutputDevice(LADDER_PIN_ON, active_high=False)
         self.jacobs_ladder_off = DigitalOutputDevice(LADDER_PIN_OFF, active_high=False)
@@ -73,9 +78,8 @@ class TrickOrTreat():
         self.bubble_switch = DigitalOutputDevice(BUBBLE_SWITCH, active_high=False)
         # self.car_forward = DigitalOutputDevice(CAR_FORWARD_PIN, active_high=False)
         # self.car_backward = DigitalOutputDevice(CAR_BACKWARD_PIN, active_high=False)
-        # Setup tricks thread
+        # Setup tricks threads
         self.trick_thread = threading.Thread(target=self._handle_tricks)
-        # Setup treats thread
         self.treat_thread = threading.Thread(target=self._handle_treats)
         
     def _handle_treats(self):
@@ -122,15 +126,15 @@ class TrickOrTreat():
         self.singing.off()
 
     def _bird_trick(self):
-        # Need to mimic pressing remote control button
+        # Make bird flap wings
         self.bird.on()
         time.sleep(BUTTON_PRESS_DELAY)
         self.bird.off()
-        # time.sleep(BIRD_TIME)
-        # Mimic button press again
-        # self.bird.on()
-        # time.sleep(BUTTON_PRESS_DELAY)
-        # self.bird.off()
+        time.sleep(BIRD_TIME)
+        # Make bird stop flapping
+        self.bird.on()
+        time.sleep(BUTTON_PRESS_DELAY)
+        self.bird.off()
 
     def _car_trick(self):
         # Need to press remote control button to drive
@@ -164,7 +168,7 @@ class TrickOrTreat():
         
     def _treat(self):
         # self.treat_led.on()
-        self.treat_motor.backward()
+        self.treat_motor.forward(CANDY_SPEED)
         time.sleep(TREAT_TIME)
         # self.treat_motor.backward()
         # time.sleep(TREAT_TIME)
@@ -179,14 +183,17 @@ class TrickOrTreat():
         self.trick_thread.start()
         self.treat_thread.start()
         while self.running:
-            if self.treat_button.is_pressed:
+            if self.prev_treat_button and not self.treat_button.is_pressed:
                 print("treat button pressed")
                 self.treat_queue.put("CANDY")
-            elif self.bubble_button.is_pressed:
-                self.trick_queue.put(random.choice(TRICKS))
+            elif self.prev_bubble_button and not self.bubble_button.is_pressed:
+                self.trick_queue.put(next(self.tricks))
+                # self.trick_queue.put(random.choice(TRICKS))
             else:
                 # Don't run too fast
                 time.sleep(0.01)
+            self.prev_bubble_button = self.bubble_button.is_pressed
+            self.prev_treat_button = self.treat_button.is_pressed
 
     def stop(self):
         self.running = False
