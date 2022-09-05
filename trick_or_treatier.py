@@ -16,8 +16,8 @@ ROLL_STEP_TIME = 0.01
 BUTTON_PRESS_DELAY = 0.1
 BIRD_TIME = 3
 CAR_DRIVE_TIME = 3
-SPHERO_SPEED = 100  # Int 0 - 255
-CANDY_SPEED = 0.5
+SPHERO_SPEED = 100  # int: (0 - 255)
+CANDY_SPEED = 0.5  # float: (0 - 1)
 TRICKS = [
     "BUBBLE",
     # "BIRD",
@@ -27,9 +27,9 @@ TRICKS = [
 ]
 # GPIO PINS
 TREAT_BUTTON_PIN = 2
-BUBBLE_BUTTON_PIN = 3
+TRICK_BUTTON_PIN = 3
 TREAT_LED_PIN = 20
-BUBBLE_LED_PIN = 21
+TRICK_LED_PIN = 21
 TREAT_MOTOR_FORWARD_PIN = 17
 TREAT_MOTOR_BACKWARD_PIN = 27
 # BUBBLE_MOTOR_FORWARD_PIN = 27
@@ -57,12 +57,12 @@ class TrickOrTreat():
         #                           backward=BUBBLE_MOTOR_BACKWARD_PIN)
         # Setup buttons
         self.treat_button = Button(TREAT_BUTTON_PIN)
-        self.bubble_button = Button(BUBBLE_BUTTON_PIN)
-        self.prev_bubble_button = False
+        self.trick_button = Button(TRICK_BUTTON_PIN)
+        self.prev_trick_button = False
         self.prev_treat_button = False
         # Setup LEDs
         self.treat_led = LED(TREAT_LED_PIN)
-        self.bubble_led = LED(BUBBLE_LED_PIN)
+        self.trick_led = LED(TRICK_LED_PIN)
         # Setup sphero ball
         if sphero_mac:
             self.sphero = sphero_mini.sphero_mini(sphero_mac)
@@ -90,7 +90,9 @@ class TrickOrTreat():
         
     def _handle_tricks(self):
         while self.running:
+            # self.trick_led.off()
             trick = self.trick_queue.get()
+            # self.trick_led.on()
             print(f"trick button pressed. Performing trick: {trick}")
             if trick == "BUBBLE":
                 self._bubble_trick()
@@ -186,13 +188,13 @@ class TrickOrTreat():
             if self.prev_treat_button and not self.treat_button.is_pressed:
                 print("treat button pressed")
                 self.treat_queue.put("CANDY")
-            elif self.prev_bubble_button and not self.bubble_button.is_pressed:
+            elif self.prev_trick_button and not self.trick_button.is_pressed:
                 self.trick_queue.put(next(self.tricks))
                 # self.trick_queue.put(random.choice(TRICKS))
             else:
                 # Don't run too fast
                 time.sleep(0.01)
-            self.prev_bubble_button = self.bubble_button.is_pressed
+            self.prev_trick_button = self.trick_button.is_pressed
             self.prev_treat_button = self.treat_button.is_pressed
 
     def stop(self):
