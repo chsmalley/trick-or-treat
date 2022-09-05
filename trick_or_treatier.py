@@ -7,7 +7,7 @@ import threading
 import queue
 
 # CONSTANTS
-TREAT_TIME = 2
+TREAT_TIME = .5
 BUBBLE_TIME = 2
 LADDER_TIME = 10
 ROLL_TIME = 3
@@ -20,6 +20,7 @@ TRICKS = [
     "BUBBLE",
     "BIRD",
     "LADDER",
+    # "SINGING",
     # "SPHERO"
 ]
 # GPIO PINS
@@ -27,15 +28,18 @@ TREAT_BUTTON_PIN = 2
 BUBBLE_BUTTON_PIN = 3
 TREAT_LED_PIN = 20
 BUBBLE_LED_PIN = 21
-TREAT_MOTOR_FORWARD_PIN = 23
-TREAT_MOTOR_BACKWARD_PIN = 24
-BUBBLE_MOTOR_FORWARD_PIN = 27
-BUBBLE_MOTOR_BACKWARD_PIN = 17
+TREAT_MOTOR_FORWARD_PIN = 27
+TREAT_MOTOR_BACKWARD_PIN = 17
+# BUBBLE_MOTOR_FORWARD_PIN = 27
+# BUBBLE_MOTOR_BACKWARD_PIN = 17
+BUBBLE_SWITCH = 5
+# SINGING_SWITCH = 6
 LADDER_PIN_ON = 26
 LADDER_PIN_OFF = 19
-BIRD_PIN = 13
-CAR_FORWARD_PIN = 6
-CAR_BACKWARD_PIN = 5
+# BIRD_PIN = 13
+BIRD_PIN = 6
+# CAR_FORWARD_PIN = 6
+# CAR_BACKWARD_PIN = 5
 
 # Trick or Treat object to handle devices
 class TrickOrTreat():
@@ -46,8 +50,9 @@ class TrickOrTreat():
         # Setup motors
         self.treat_motor = Motor(forward=TREAT_MOTOR_FORWARD_PIN,
                                  backward=TREAT_MOTOR_BACKWARD_PIN)
-        self.bubble_motor = Motor(forward=BUBBLE_MOTOR_FORWARD_PIN,
-                                  backward=BUBBLE_MOTOR_BACKWARD_PIN)
+        self.treat_motor.stop()
+        # self.bubble_motor = Motor(forward=BUBBLE_MOTOR_FORWARD_PIN,
+        #                           backward=BUBBLE_MOTOR_BACKWARD_PIN)
         # Setup buttons
         self.treat_button = Button(TREAT_BUTTON_PIN)
         self.bubble_button = Button(BUBBLE_BUTTON_PIN)
@@ -62,10 +67,15 @@ class TrickOrTreat():
             self.sphero = None
         # Setup other tricks
         self.jacobs_ladder_on = DigitalOutputDevice(LADDER_PIN_ON)
+        self.jacobs_ladder_on.on()
         self.jacobs_ladder_off = DigitalOutputDevice(LADDER_PIN_OFF)
+        self.jacobs_ladder_off.on()
         self.bird = DigitalOutputDevice(BIRD_PIN)
-        self.car_forward = DigitalOutputDevice(CAR_FORWARD_PIN)
-        self.car_backward = DigitalOutputDevice(CAR_BACKWARD_PIN)
+        self.bird.on()
+        self.bubble_switch = DigitalOutputDevice(BUBBLE_SWITCH)
+        self.bubble_switch.on()
+        # self.car_forward = DigitalOutputDevice(CAR_FORWARD_PIN)
+        # self.car_backward = DigitalOutputDevice(CAR_BACKWARD_PIN)
         # Setup tricks thread
         self.trick_thread = threading.Thread(target=self._handle_tricks)
         # Setup treats thread
@@ -93,20 +103,22 @@ class TrickOrTreat():
                 print(f"Unknown trick: {trick}")
             
     def _bubble_trick(self):
-        self.bubble_motor.forward()
-        self.bubble_led.on()
+        # self.bubble_motor.forward()
+        # self.bubble_led.on()
+        self.bubble_switch.off()
         time.sleep(BUBBLE_TIME)
-        self.bubble_motor.stop()
-        self.bubble_led.off()
+        self.bubble_switch.on()
+        # self.bubble_motor.stop()
+        # self.bubble_led.off()
 
     def _ladder_trick(self):
-        self.jacobs_ladder_on.on()
-        time.sleep(BUTTON_PRESS_DELAY)
         self.jacobs_ladder_on.off()
-        time.sleep(LADDER_TIME)
-        self.jacobs_ladder_off.on()
         time.sleep(BUTTON_PRESS_DELAY)
+        self.jacobs_ladder_on.on()
+        time.sleep(LADDER_TIME)
         self.jacobs_ladder_off.off()
+        time.sleep(BUTTON_PRESS_DELAY)
+        self.jacobs_ladder_off.on()
 
     def _lights_trick(self):
         self.lights.on()
@@ -115,24 +127,25 @@ class TrickOrTreat():
 
     def _bird_trick(self):
         # Need to mimic pressing remote control button
-        self.bird.on()
-        time.sleep(BUTTON_PRESS_DELAY)
         self.bird.off()
-        time.sleep(BIRD_TIME)
+        time.sleep(BUTTON_PRESS_DELAY)
+        self.bird.on()
+        # time.sleep(BIRD_TIME)
         # Mimic button press again
-        self.bird.on()
-        time.sleep(BUTTON_PRESS_DELAY)
-        self.bird.off()
+        # self.bird.on()
+        # time.sleep(BUTTON_PRESS_DELAY)
+        # self.bird.off()
 
     def _car_trick(self):
         # Need to press remote control button to drive
-        self.car_forward.on()
-        time.sleep(CAR_DRIVE_TIME)
-        self.car_forward.off()
-        time.sleep(CAR_DRIVE_TIME)
-        self.car_backward.on()
-        time.sleep(CAR_DRIVE_TIME)
-        self.car_backward.off()
+        pass
+        # self.car_forward.on()
+        # time.sleep(CAR_DRIVE_TIME)
+        # self.car_forward.off()
+        # time.sleep(CAR_DRIVE_TIME)
+        # self.car_backward.on()
+        # time.sleep(CAR_DRIVE_TIME)
+        # self.car_backward.off()
 
     def _sphero_trick2(self):
         self.sphero.setLEDColor(red=255, green=0, blue=0)
@@ -154,15 +167,15 @@ class TrickOrTreat():
         self.sphero.setLEDColor(red=0, green=0, blue=255)
         
     def _treat(self):
-        self.treat_led.on()
-        self.treat_motor.forward()
+        # self.treat_led.on()
+        self.treat_motor.backward()
         time.sleep(TREAT_TIME)
         # self.treat_motor.backward()
         # time.sleep(TREAT_TIME)
         # self.treat_motor.forward()
         # time.sleep(TREAT_TIME)
         self.treat_motor.stop()
-        self.treat_led.off()
+        # self.treat_led.off()
     
     def run(self):
         self.running = True
@@ -187,9 +200,10 @@ class TrickOrTreat():
 if __name__ == '__main__':
     # EB:B6:31:82:7C:F0
     # sphero_mac = sys.argv[1]
-    sphero_mac = "EB:B6:31:82:7C:F0"
+    # sphero_mac = "EB:B6:31:82:7C:F0"
     print("Welcome trick or treaters")
-    trick_or_treat = TrickOrTreat(sphero_mac)
+    # trick_or_treat = TrickOrTreat(sphero_mac)
+    trick_or_treat = TrickOrTreat("")
     try:
         trick_or_treat.run()
     except KeyboardInterrupt:
