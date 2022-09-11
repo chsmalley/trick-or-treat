@@ -74,7 +74,7 @@ class TrickOrTreat():
         self.jacobs_ladder_on = DigitalOutputDevice(LADDER_PIN_ON, active_high=False)
         self.jacobs_ladder_off = DigitalOutputDevice(LADDER_PIN_OFF, active_high=False)
         self.bird = DigitalOutputDevice(BIRD_PIN, active_high=False)
-        self.singing = DigitalOutputDevice(BIRD_PIN, active_high=False)
+        self.singing = DigitalOutputDevice(SINGING_SWITCH, active_high=False)
         self.bubble_switch = DigitalOutputDevice(BUBBLE_SWITCH, active_high=False)
         # self.car_forward = DigitalOutputDevice(CAR_FORWARD_PIN, active_high=False)
         # self.car_backward = DigitalOutputDevice(CAR_BACKWARD_PIN, active_high=False)
@@ -185,6 +185,7 @@ class TrickOrTreat():
         self.trick_thread.start()
         self.treat_thread.start()
         while self.running:
+            print(f"prev: {self.prev_treat_button}, curr: {self.treat_button.is_pressed}")
             if self.prev_treat_button and not self.treat_button.is_pressed:
                 print("treat button pressed")
                 self.treat_queue.put("CANDY")
@@ -193,9 +194,9 @@ class TrickOrTreat():
                 # self.trick_queue.put(random.choice(TRICKS))
             else:
                 # Don't run too fast
-                time.sleep(0.01)
             self.prev_trick_button = self.trick_button.is_pressed
             self.prev_treat_button = self.treat_button.is_pressed
+            time.sleep(0.01)
 
     def stop(self):
         self.running = False
