@@ -8,7 +8,7 @@ import queue
 from itertools import cycle
 
 # CONSTANTS
-TREAT_TIME = .5
+TREAT_TIME = 1
 BUBBLE_TIME = 2
 LADDER_TIME = 10
 ROLL_TIME = 3
@@ -185,18 +185,21 @@ class TrickOrTreat():
         self.trick_thread.start()
         self.treat_thread.start()
         while self.running:
+            treat_pressed = self.prev_treat_button and not self.treat_button.is_pressed
+            trick_pressed = self.prev_trick_button and not self.trick_button.is_pressed
+            self.prev_trick_button = self.trick_button.is_pressed
+            self.prev_treat_button = self.treat_button.is_pressed
             print(f"prev: {self.prev_treat_button}, curr: {self.treat_button.is_pressed}")
-            if self.prev_treat_button and not self.treat_button.is_pressed:
+            if treat_pressed:
                 print("treat button pressed")
                 self.treat_queue.put("CANDY")
-            elif self.prev_trick_button and not self.trick_button.is_pressed:
+            elif trick_pressed:
+                print("trick button pressed")
                 self.trick_queue.put(next(self.tricks))
                 # self.trick_queue.put(random.choice(TRICKS))
             else:
                 # Don't run too fast
-            self.prev_trick_button = self.trick_button.is_pressed
-            self.prev_treat_button = self.treat_button.is_pressed
-            time.sleep(0.01)
+                time.sleep(0.01)
 
     def stop(self):
         self.running = False
