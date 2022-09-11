@@ -17,7 +17,7 @@ BUTTON_PRESS_DELAY = 0.1
 BIRD_TIME = 3
 CAR_DRIVE_TIME = 3
 SPHERO_SPEED = 100  # int: (0 - 255)
-CANDY_SPEED = 0.5  # float: (0 - 1)
+CANDY_SPEED = 0.2  # float: (0 - 1)
 TRICKS = [
     "BUBBLE",
     # "BIRD",
@@ -185,17 +185,19 @@ class TrickOrTreat():
         self.trick_thread.start()
         self.treat_thread.start()
         while self.running:
-            if self.prev_treat_button and not self.treat_button.is_pressed:
+            treat_pressed = self.prev_treat_button and not self.treat_button.is_pressed
+            trick_pressed = self.prev_trick_button and not self.trick_button.is_pressed
+            self.prev_trick_button = self.trick_button.is_pressed
+            self.prev_treat_button = self.treat_button.is_pressed
+            if treat_pressed:
                 print("treat button pressed")
                 self.treat_queue.put("CANDY")
-            elif self.prev_trick_button and not self.trick_button.is_pressed:
+            elif trick_pressed:
                 self.trick_queue.put(next(self.tricks))
                 # self.trick_queue.put(random.choice(TRICKS))
             else:
                 # Don't run too fast
                 time.sleep(0.01)
-            self.prev_trick_button = self.trick_button.is_pressed
-            self.prev_treat_button = self.treat_button.is_pressed
 
     def stop(self):
         self.running = False
