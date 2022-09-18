@@ -12,8 +12,9 @@ logging.basicConfig(filename="trick_or_treak.log", level=logging.INFO)
 
 # CONSTANTS
 TREAT_TIME = 1
-BUBBLE_TIME = 2
+BUBBLE_TIME = 5
 LADDER_TIME = 10
+SINGING_TIME = 10
 ROLL_TIME = 3
 ROLL_STEP_TIME = 0.01
 BUTTON_PRESS_DELAY = 0.1
@@ -23,10 +24,9 @@ SPHERO_SPEED = 100  # int: (0 - 255)
 CANDY_SPEED = 0.5  # float: (0 - 1)
 TRICKS = [
     "BUBBLE",
-    # "BIRD",
+    "BIRD",
     "LADDER",
-    "SINGING",
-    # "SPHERO"
+    "SINGING"
 ]
 # GPIO PINS
 TREAT_BUTTON_PIN = 2
@@ -35,9 +35,10 @@ TREAT_LED_PIN = 20
 TRICK_LED_PIN = 21
 TREAT_MOTOR_FORWARD_PIN = 17
 TREAT_MOTOR_BACKWARD_PIN = 27
-# BUBBLE_MOTOR_FORWARD_PIN = 27
-# BUBBLE_MOTOR_BACKWARD_PIN = 17
+# DRINK_MOTOR_FORWARD_PIN = 27
+# DRINK_MOTOR_BACKWARD_PIN = 17
 BUBBLE_SWITCH = 5
+# BUBBLE_SWITCH_2 = 5
 SINGING_SWITCH = 6
 LADDER_PIN_ON = 26
 LADDER_PIN_OFF = 19
@@ -56,8 +57,8 @@ class TrickOrTreat():
         self.treat_motor = Motor(forward=TREAT_MOTOR_FORWARD_PIN,
                                  backward=TREAT_MOTOR_BACKWARD_PIN)
         self.treat_motor.stop()
-        # self.bubble_motor = Motor(forward=BUBBLE_MOTOR_FORWARD_PIN,
-        #                           backward=BUBBLE_MOTOR_BACKWARD_PIN)
+        # self.drink_treat_motor = Motor(forward=DRINK_MOTOR_FORWARD_PIN,
+        #                                backward=DRINK_MOTOR_BACKWARD_PIN)
         # Setup buttons
         self.treat_button = Button(TREAT_BUTTON_PIN)
         self.trick_button = Button(TRICK_BUTTON_PIN)
@@ -79,6 +80,7 @@ class TrickOrTreat():
         self.bird = DigitalOutputDevice(BIRD_PIN, active_high=False)
         self.singing = DigitalOutputDevice(SINGING_SWITCH, active_high=False)
         self.bubble_switch = DigitalOutputDevice(BUBBLE_SWITCH, active_high=False)
+        # self.bubble_switch2 = DigitalOutputDevice(BUBBLE_SWITCH_2, active_high=False)
         # self.car_forward = DigitalOutputDevice(CAR_FORWARD_PIN, active_high=False)
         # self.car_backward = DigitalOutputDevice(CAR_BACKWARD_PIN, active_high=False)
         # Setup tricks threads
@@ -112,8 +114,10 @@ class TrickOrTreat():
             
     def _bubble_trick(self):
         self.bubble_switch.on()
+        # self.bubble_switch_2.on()
         time.sleep(BUBBLE_TIME)
         self.bubble_switch.off()
+        # self.bubble_switch_2.off()
 
     def _ladder_trick(self):
         self.jacobs_ladder_on.on()
@@ -126,6 +130,10 @@ class TrickOrTreat():
 
     def _singing_trick(self):
         # Need to mimic pressing remote control button
+        self.singing.on()
+        time.sleep(BUTTON_PRESS_DELAY)
+        self.singing.off()
+        time.sleep(SINGING_TIME)
         self.singing.on()
         time.sleep(BUTTON_PRESS_DELAY)
         self.singing.off()
@@ -192,12 +200,12 @@ class TrickOrTreat():
             trick_pressed = self.prev_trick_button and not self.trick_button.is_pressed
             self.prev_trick_button = self.trick_button.is_pressed
             self.prev_treat_button = self.treat_button.is_pressed
-            print(f"prev: {self.prev_treat_button}, curr: {self.treat_button.is_pressed}")
+            # print(f"prev: {self.prev_treat_button}, curr: {self.treat_button.is_pressed}")
             if treat_pressed:
-                print("treat button pressed")
+                logging.INFO("treat button pressed")
                 self.treat_queue.put("CANDY")
             elif trick_pressed:
-                print("trick button pressed")
+                logging.INFO("trick button pressed")
                 self.trick_queue.put(next(self.tricks))
                 # self.trick_queue.put(random.choice(TRICKS))
             else:
