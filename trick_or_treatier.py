@@ -6,6 +6,9 @@ import random
 import threading
 import queue
 from itertools import cycle
+import logging
+
+logging.basicConfig(filename="trick_or_treak.log", level=logging.INFO)
 
 # CONSTANTS
 TREAT_TIME = 1
