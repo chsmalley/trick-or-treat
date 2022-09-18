@@ -11,7 +11,7 @@ import logging
 logging.basicConfig(filename="trick_or_treak.log", level=logging.INFO)
 
 # CONSTANTS
-TREAT_TIME = 1
+TREAT_TIME = 0.2
 BUBBLE_TIME = 5
 LADDER_TIME = 10
 SINGING_TIME = 10
@@ -21,7 +21,7 @@ BUTTON_PRESS_DELAY = 0.1
 BIRD_TIME = 3
 CAR_DRIVE_TIME = 3
 SPHERO_SPEED = 100  # int: (0 - 255)
-CANDY_SPEED = 0.5  # float: (0 - 1)
+CANDY_SPEED = 0.2  # float: (0 - 1)
 TRICKS = [
     "BUBBLE",
     "BIRD",
@@ -183,10 +183,11 @@ class TrickOrTreat():
         # self.treat_led.on()
         self.treat_motor.forward(CANDY_SPEED)
         time.sleep(TREAT_TIME)
-        # self.treat_motor.backward()
-        # time.sleep(TREAT_TIME)
-        # self.treat_motor.forward()
-        # time.sleep(TREAT_TIME)
+        self.treat_motor.backward()
+        time.sleep(TREAT_TIME)
+        self.treat_motor.forward()
+        time.sleep(TREAT_TIME)
+        time.sleep(TREAT_TIME)
         self.treat_motor.stop()
         # self.treat_led.off()
     
@@ -202,10 +203,10 @@ class TrickOrTreat():
             self.prev_treat_button = self.treat_button.is_pressed
             # print(f"prev: {self.prev_treat_button}, curr: {self.treat_button.is_pressed}")
             if treat_pressed:
-                logging.INFO("treat button pressed")
+                logging.info("treat button pressed")
                 self.treat_queue.put("CANDY")
             elif trick_pressed:
-                logging.INFO("trick button pressed")
+                logging.info("trick button pressed")
                 self.trick_queue.put(next(self.tricks))
                 # self.trick_queue.put(random.choice(TRICKS))
             else:
