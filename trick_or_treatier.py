@@ -8,7 +8,12 @@ import queue
 from itertools import cycle
 import logging
 
-logging.basicConfig(filename="trick_or_treak.log", level=logging.INFO)
+logging.basicConfig(
+    filename="trick_or_treak.log",
+    format='%(asctime)s %(levelname)-8s %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S',
+    level=logging.INFO
+)
 
 # CONSTANTS
 TREAT_TIME = 0.2
@@ -38,7 +43,7 @@ TREAT_MOTOR_BACKWARD_PIN = 27
 # DRINK_MOTOR_FORWARD_PIN = 27
 # DRINK_MOTOR_BACKWARD_PIN = 17
 BUBBLE_SWITCH = 5
-# BUBBLE_SWITCH_2 = 5
+BUBBLE_SWITCH_2 = 5
 SINGING_SWITCH = 6
 LADDER_PIN_ON = 26
 LADDER_PIN_OFF = 19
@@ -80,7 +85,7 @@ class TrickOrTreat():
         self.bird = DigitalOutputDevice(BIRD_PIN, active_high=False)
         self.singing = DigitalOutputDevice(SINGING_SWITCH, active_high=False)
         self.bubble_switch = DigitalOutputDevice(BUBBLE_SWITCH, active_high=False)
-        # self.bubble_switch2 = DigitalOutputDevice(BUBBLE_SWITCH_2, active_high=False)
+        self.bubble_switch2 = DigitalOutputDevice(BUBBLE_SWITCH_2, active_high=False)
         # self.car_forward = DigitalOutputDevice(CAR_FORWARD_PIN, active_high=False)
         # self.car_backward = DigitalOutputDevice(CAR_BACKWARD_PIN, active_high=False)
         # Setup tricks threads
@@ -114,10 +119,10 @@ class TrickOrTreat():
             
     def _bubble_trick(self):
         self.bubble_switch.on()
-        # self.bubble_switch_2.on()
+        self.bubble_switch_2.on()
         time.sleep(BUBBLE_TIME)
         self.bubble_switch.off()
-        # self.bubble_switch_2.off()
+        self.bubble_switch_2.off()
 
     def _ladder_trick(self):
         self.jacobs_ladder_on.on()
