@@ -9,9 +9,9 @@ from itertools import cycle
 import logging
 
 logging.basicConfig(
-    filename="trick_or_treak.log",
-    format='%(asctime)s %(levelname)-8s %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S',
+    filename="trick_or_treat.log",
+    format='%(asctime)s,%(levelname)s,%(message)s',
+    datefmt='%Y-%m-%d,%H:%M:%S',
     level=logging.INFO
 )
 
@@ -208,10 +208,10 @@ class TrickOrTreat():
             self.prev_treat_button = self.treat_button.is_pressed
             # print(f"prev: {self.prev_treat_button}, curr: {self.treat_button.is_pressed}")
             if treat_pressed:
-                logging.info("treat button pressed")
+                logging.info("treat")
                 self.treat_queue.put("CANDY")
             elif trick_pressed:
-                logging.info("trick button pressed")
+                logging.info("trick")
                 self.trick_queue.put(next(self.tricks))
                 # self.trick_queue.put(random.choice(TRICKS))
             else:
