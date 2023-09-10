@@ -20,6 +20,8 @@ TREAT_TIME = 0.2
 BUBBLE_TIME = 5
 LADDER_TIME = 10
 GHOST_TIME = 15
+LADDER_TIME = 0.8
+LADDER_COUNT = 8
 SINGING_TIME = 10
 ROLL_TIME = 3
 ROLL_STEP_TIME = 0.01
@@ -36,6 +38,7 @@ TRICKS = [
     "GHOST"
 ]
 # GPIO PINS
+JACK_BUTTON_PIN = 12
 TREAT_BUTTON_PIN = 2
 TRICK_BUTTON_PIN = 3
 TREAT_LED_PIN = 20
@@ -90,7 +93,8 @@ class TrickOrTreat():
         self.bird = DigitalOutputDevice(BIRD_PIN, active_high=False)
         self.singing = DigitalOutputDevice(SINGING_SWITCH, active_high=False)
         self.bubble_switch = DigitalOutputDevice(BUBBLE_SWITCH, active_high=False)
-        self.bubble_switch2 = DigitalOutputDevice(BUBBLE_SWITCH_2, active_high=False)
+        self.bubble_switch_2 = DigitalOutputDevice(BUBBLE_SWITCH_2, active_high=False)
+        self.jack_switch = DigitalOutputDevice(JACK_BUTTON_PIN , active_high=False)
         # self.car_forward = DigitalOutputDevice(CAR_FORWARD_PIN, active_high=False)
         # self.car_backward = DigitalOutputDevice(CAR_BACKWARD_PIN, active_high=False)
         # Setup tricks threads
@@ -119,6 +123,8 @@ class TrickOrTreat():
                 self._singing_trick()
             elif trick == "BIRD":
                 self._bird_trick()
+            elif trick == "GHOST":
+                self._ghost_trick()
             else:
                 print(f"Unknown trick: {trick}")
             
@@ -139,13 +145,21 @@ class TrickOrTreat():
         self.ghost_off.off()
 
     def _ladder_trick(self):
-        self.jacobs_ladder_on.on()
+        self.jack_switch.on()
         time.sleep(BUTTON_PRESS_DELAY)
-        self.jacobs_ladder_on.off()
-        time.sleep(LADDER_TIME)
-        self.jacobs_ladder_off.on()
+        self.jack_switch.off()
+        for _ in range(LADDER_COUNT):
+            self.jacobs_ladder_on.on()
+            time.sleep(BUTTON_PRESS_DELAY)
+            self.jacobs_ladder_on.off()
+            time.sleep(LADDER_TIME)
+            self.jacobs_ladder_off.on()
+            time.sleep(BUTTON_PRESS_DELAY)
+            self.jacobs_ladder_off.off()
+            time.sleep(LADDER_TIME)
+        self.jack_switch.on()
         time.sleep(BUTTON_PRESS_DELAY)
-        self.jacobs_ladder_off.off()
+        self.jack_switch.off()
 
     def _singing_trick(self):
         # Need to mimic pressing remote control button
@@ -239,11 +253,11 @@ class TrickOrTreat():
 
 if __name__ == '__main__':
     # EB:B6:31:82:7C:F0
-    # sphero_mac = sys.argv[1]
+    sphero_mac = sys.argv[1]
     # sphero_mac = "EB:B6:31:82:7C:F0"
     print("Welcome trick or treaters")
-    # trick_or_treat = TrickOrTreat(sphero_mac)
-    trick_or_treat = TrickOrTreat("")
+    trick_or_treat = TrickOrTreat(sphero_mac)
+    # trick_or_treat = TrickOrTreat("")
     try:
         trick_or_treat.run()
     except KeyboardInterrupt:
