@@ -43,7 +43,7 @@ TRICKS = [
 JACK_BUTTON_PIN = 12
 TREAT_BUTTON_PIN = 2
 TRICK_BUTTON_PIN = 3
-DRINK_BUTTON_PIN = 4
+DRINK_BUTTON_PIN = 25
 TREAT_LED_PIN = 20
 TRICK_LED_PIN = 21
 TREAT_MOTOR_FORWARD_PIN = 17
@@ -252,7 +252,7 @@ class TrickOrTreat():
             drink_pressed = self.prev_drink_button and not self.drink_button.is_pressed
             treat_pressed = self.prev_treat_button and not self.treat_button.is_pressed
             trick_pressed = self.prev_trick_button and not self.trick_button.is_pressed
-            self.prev_treat2_button = self.treat2_button.is_pressed
+            self.prev_drink_button = self.drink_button.is_pressed
             self.prev_treat_button = self.treat_button.is_pressed
             self.prev_trick_button = self.trick_button.is_pressed
             # print(f"prev: {self.prev_treat_button}, curr: {self.treat_button.is_pressed}")
