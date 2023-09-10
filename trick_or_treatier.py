@@ -19,6 +19,7 @@ logging.basicConfig(
 TREAT_TIME = 0.2
 BUBBLE_TIME = 5
 LADDER_TIME = 10
+GHOST_TIME = 15
 SINGING_TIME = 10
 ROLL_TIME = 3
 ROLL_STEP_TIME = 0.01
@@ -31,7 +32,8 @@ TRICKS = [
     "BUBBLE",
     "BIRD",
     "LADDER",
-    "SINGING"
+    "SINGING",
+    "GHOST"
 ]
 # GPIO PINS
 TREAT_BUTTON_PIN = 2
@@ -47,8 +49,9 @@ BUBBLE_SWITCH_2 = 22
 SINGING_SWITCH = 6
 LADDER_PIN_ON = 26
 LADDER_PIN_OFF = 19
+GHOST_PIN_ON = 10
+GHOST_PIN_OFF = 9
 BIRD_PIN = 13
-# BIRD_PIN = 6
 # CAR_FORWARD_PIN = 6
 # CAR_BACKWARD_PIN = 5
 
@@ -80,6 +83,8 @@ class TrickOrTreat():
             self.sphero = None
         self.tricks = cycle(TRICKS)
         # Setup other tricks
+        self.ghost_on = DigitalOutputDevice(GHOST_PIN_ON, active_high=False)
+        self.ghost_off = DigitalOutputDevice(GHOST_PIN_OFF, active_high=False)
         self.jacobs_ladder_on = DigitalOutputDevice(LADDER_PIN_ON, active_high=False)
         self.jacobs_ladder_off = DigitalOutputDevice(LADDER_PIN_OFF, active_high=False)
         self.bird = DigitalOutputDevice(BIRD_PIN, active_high=False)
@@ -123,6 +128,15 @@ class TrickOrTreat():
         time.sleep(BUBBLE_TIME)
         self.bubble_switch.off()
         self.bubble_switch_2.off()
+
+    def _ghost_trick(self):
+        self.ghost_on.on()
+        time.sleep(BUTTON_PRESS_DELAY)
+        self.ghost_on.off()
+        time.sleep(GHOST_TIME)
+        self.ghost_off.on()
+        time.sleep(BUTTON_PRESS_DELAY)
+        self.ghost_off.off()
 
     def _ladder_trick(self):
         self.jacobs_ladder_on.on()
