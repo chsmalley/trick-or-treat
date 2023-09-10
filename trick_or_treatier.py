@@ -17,6 +17,7 @@ logging.basicConfig(
 
 # CONSTANTS
 TREAT_TIME = 0.2
+DRINK_TIME = 1
 BUBBLE_TIME = 5
 LADDER_TIME = 10
 GHOST_TIME = 15
@@ -30,6 +31,7 @@ BIRD_TIME = 3
 CAR_DRIVE_TIME = 3
 SPHERO_SPEED = 100  # int: (0 - 255)
 CANDY_SPEED = 0.2  # float: (0 - 1)
+DRINK_SPEED = 0.8  # float: (0 - 1)
 TRICKS = [
     "BUBBLE",
     "BIRD",
@@ -41,12 +43,13 @@ TRICKS = [
 JACK_BUTTON_PIN = 12
 TREAT_BUTTON_PIN = 2
 TRICK_BUTTON_PIN = 3
+DRINK_BUTTON_PIN = 4
 TREAT_LED_PIN = 20
 TRICK_LED_PIN = 21
 TREAT_MOTOR_FORWARD_PIN = 17
 TREAT_MOTOR_BACKWARD_PIN = 27
-# DRINK_MOTOR_FORWARD_PIN = 27
-# DRINK_MOTOR_BACKWARD_PIN = 17
+DRINK_MOTOR_FORWARD_PIN = 23
+DRINK_MOTOR_BACKWARD_PIN = 24
 BUBBLE_SWITCH = 5
 BUBBLE_SWITCH_2 = 22
 SINGING_SWITCH = 6
@@ -62,17 +65,20 @@ BIRD_PIN = 13
 class TrickOrTreat():
     def __init__(self, sphero_mac: str):
         self.running = False
+        self.drink_queue = queue.Queue()
         self.trick_queue = queue.Queue()
         self.treat_queue = queue.Queue()
         # Setup motors
         self.treat_motor = Motor(forward=TREAT_MOTOR_FORWARD_PIN,
                                  backward=TREAT_MOTOR_BACKWARD_PIN)
         self.treat_motor.stop()
-        # self.drink_treat_motor = Motor(forward=DRINK_MOTOR_FORWARD_PIN,
-        #                                backward=DRINK_MOTOR_BACKWARD_PIN)
+        self.drink_motor = Motor(forward=DRINK_MOTOR_FORWARD_PIN,
+                                       backward=DRINK_MOTOR_BACKWARD_PIN)
         # Setup buttons
+        self.drink_button = Button(DRINK_BUTTON_PIN)
         self.treat_button = Button(TREAT_BUTTON_PIN)
         self.trick_button = Button(TRICK_BUTTON_PIN)
+        self.prev_drink_button = False
         self.prev_trick_button = False
         self.prev_treat_button = False
         # Setup LEDs
@@ -100,6 +106,13 @@ class TrickOrTreat():
         # Setup tricks threads
         self.trick_thread = threading.Thread(target=self._handle_tricks)
         self.treat_thread = threading.Thread(target=self._handle_treats)
+        self.drink_thread = threading.Thread(target=self._handle_drinks)
+        
+    def _handle_drinks(self):
+        while self.running:
+            drink = self.drink_queue.get()
+            if drink == "DRINK":
+                self._drink()
         
     def _handle_treats(self):
         while self.running:
@@ -109,9 +122,9 @@ class TrickOrTreat():
         
     def _handle_tricks(self):
         while self.running:
-            # self.trick_led.off()
+            self.trick_led.off()
             trick = self.trick_queue.get()
-            # self.trick_led.on()
+            self.trick_led.on()
             print(f"trick button pressed. Performing trick: {trick}")
             if trick == "BUBBLE":
                 self._bubble_trick()
@@ -212,8 +225,13 @@ class TrickOrTreat():
         self.sphero.wait(1)
         self.sphero.setLEDColor(red=0, green=0, blue=255)
         
+    def _drink(self):
+        self.drink_motor.forward(DRINK_SPEED)
+        time.sleep(DRINK_TIME)
+        self.drink_motor.stop()
+        
     def _treat(self):
-        # self.treat_led.on()
+        self.treat_led.on()
         self.treat_motor.forward(CANDY_SPEED)
         time.sleep(TREAT_TIME)
         self.treat_motor.backward()
@@ -222,22 +240,28 @@ class TrickOrTreat():
         time.sleep(TREAT_TIME)
         time.sleep(TREAT_TIME)
         self.treat_motor.stop()
-        # self.treat_led.off()
+        self.treat_led.off()
     
     def run(self):
         self.running = True
         # Start threads
         self.trick_thread.start()
         self.treat_thread.start()
+        self.drink_thread.start()
         while self.running:
+            drink_pressed = self.prev_drink_button and not self.drink_button.is_pressed
             treat_pressed = self.prev_treat_button and not self.treat_button.is_pressed
             trick_pressed = self.prev_trick_button and not self.trick_button.is_pressed
-            self.prev_trick_button = self.trick_button.is_pressed
+            self.prev_treat2_button = self.treat2_button.is_pressed
             self.prev_treat_button = self.treat_button.is_pressed
+            self.prev_trick_button = self.trick_button.is_pressed
             # print(f"prev: {self.prev_treat_button}, curr: {self.treat_button.is_pressed}")
             if treat_pressed:
                 logging.info("treat")
                 self.treat_queue.put("CANDY")
+            elif drink_pressed:
+                logging.info("drink")
+                self.drink_queue.put("DRINK")
             elif trick_pressed:
                 logging.info("trick")
                 self.trick_queue.put(next(self.tricks))
