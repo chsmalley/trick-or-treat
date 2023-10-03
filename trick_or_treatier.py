@@ -60,8 +60,8 @@ class TrickOrTreat():
     def __init__(self, sphero_mac: str):
         self.running = False
         self.drink_queue = queue.Queue()
-        self.trick_queue = queue.Queue()
         self.current_trick = None
+        self.trick_end_time = time.time()
         self.treat_queue = queue.Queue()
         # Setup motors
         self.treat_motor = Motor(forward=TREAT_MOTOR_FORWARD_PIN,
@@ -76,7 +76,6 @@ class TrickOrTreat():
         self.prev_drink_button = False
         self.prev_trick_button = False
         self.prev_treat_button = False
-        self.trick_running = False
         # Setup LEDs
         self.treat_led = LED(TREAT_LED_PIN)
         self.trick_led = LED(TRICK_LED_PIN)
@@ -95,7 +94,7 @@ class TrickOrTreat():
         self.ghost_off = DigitalOutputDevice(GHOST_PIN_OFF, active_high=False)
         self.lights_on = DigitalOutputDevice(LIGHTS_PIN_ON, active_high=False)
         self.lights_off = DigitalOutputDevice(LIGHTS_PIN_OFF, active_high=False)
-        # Start with being on 
+        # Start by turning on the lights
         self.lights_on.on()
         time.sleep(BUTTON_PRESS_DELAY)
         self.lights_on.off()
@@ -104,8 +103,6 @@ class TrickOrTreat():
         self.bubble_switch = DigitalOutputDevice(BUBBLE_SWITCH, active_high=False)
         self.bubble_switch_2 = DigitalOutputDevice(BUBBLE_SWITCH_2, active_high=False)
         self.jack_switch = DigitalOutputDevice(JACK_BUTTON_PIN , active_high=False)
-        # self.car_forward = DigitalOutputDevice(CAR_FORWARD_PIN, active_high=False)
-        # self.car_backward = DigitalOutputDevice(CAR_BACKWARD_PIN, active_high=False)
         # Setup tricks threads
         self.trick_thread = threading.Thread(target=self._handle_tricks)
         self.treat_thread = threading.Thread(target=self._handle_treats)
@@ -136,33 +133,15 @@ class TrickOrTreat():
             if treat == "CANDY":
                 self._treat()
         
-    def _handle_tricks_old(self):
-        while self.running:
-            self.trick_led.off()
-            trick = self.trick_queue.get()
-            self.trick_led.on()
-            print(f"trick button pressed. Performing trick: {trick}")
-            if trick == "BUBBLE":
-                self._bubble_trick()
-            elif trick == "SPHERO":
-                self._sphero_trick()
-            elif trick == "LIGHTS":
-                self._lights_trick()
-            elif trick == "SINGING":
-                self._singing_trick()
-            elif trick == "BIRD":
-                self._bird_trick()
-            elif trick == "GHOST":
-                self._ghost_trick()
-            else:
-                print(f"Unknown trick: {trick}")
-        
     def _handle_tricks(self):
         while self.running:
-            self.trick_led.off()
-            trick = self.trick_queue.get()
-            self.trick_led.on()
-            print(f"trick button pressed. Performing trick: {trick}")
+            if time.time() < self.trick_end_time:
+                self.trick_led.on()
+            else:
+                self.trick_led.off()
+            trick = self.current_trick
+            if trick is not None:
+                print(f"trick button pressed. Performing trick: {trick}")
             if trick == "BUBBLE":
                 self._bubble_trick()
             elif trick == "LIGHTS":
@@ -171,6 +150,8 @@ class TrickOrTreat():
                 self._singing_trick()
             elif trick == "GHOST":
                 self._ghost_trick()
+            elif trick is None:
+                time.sleep(0.01)
             else:
                 print(f"Unknown trick: {trick}")
             
@@ -282,6 +263,8 @@ class TrickOrTreat():
             self.prev_treat_button = self.treat_button.is_pressed
             self.prev_trick_button = self.trick_button.is_pressed
             # print(f"prev: {self.prev_treat_button}, curr: {self.treat_button.is_pressed}")
+            if time.time() > self.trick_end_time:
+                self.current_trick = None
             if treat_pressed:
                 logging.info("treat")
                 self.treat_queue.put("CANDY")
@@ -289,11 +272,12 @@ class TrickOrTreat():
                 logging.info("drink")
                 self.drink_queue.put("DRINK")
             elif trick_pressed:
-                if not self.trick_running:
+                if not self.current_trick:
                     logging.info("trick")
                     self.current_trick = next(self.tricks)
                     self.trick_end_time = time.time() + TRICK_TIME
                 else:
+                    self.current_trick = None
                     self.trick_end_time = time.time()
             else:
                 # Don't run too fast
