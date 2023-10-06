@@ -33,7 +33,8 @@ TRICKS = [
     "BUBBLE",
     "LIGHTS",
     "SINGING",
-    "GHOST"
+    "GHOST",
+    "BLOOD"
 ]
 # GPIO PINS
 JACK_BUTTON_PIN = 12
@@ -46,9 +47,10 @@ TREAT_MOTOR_FORWARD_PIN = 17
 TREAT_MOTOR_BACKWARD_PIN = 27
 DRINK_MOTOR_FORWARD_PIN = 23
 DRINK_MOTOR_BACKWARD_PIN = 24
-BUBBLE_SWITCH = 5
+BUBBLE_SWITCH = 14
 BUBBLE_SWITCH_2 = 22
 SINGING_SWITCH = 6
+BLOOD_SWITCH = 8
 LIGHTS_PIN_ON = 26
 LIGHTS_PIN_OFF = 19
 GHOST_PIN_ON = 10
@@ -100,6 +102,7 @@ class TrickOrTreat():
         self.lights_on.off()
         self.bird = DigitalOutputDevice(BIRD_PIN, active_high=False)
         self.singing = DigitalOutputDevice(SINGING_SWITCH, active_high=False)
+        self.blood_switch = DigitalOutputDevice(BLOOD_SWITCH, active_high=False)
         self.bubble_switch = DigitalOutputDevice(BUBBLE_SWITCH, active_high=False)
         self.bubble_switch_2 = DigitalOutputDevice(BUBBLE_SWITCH_2, active_high=False)
         self.jack_switch = DigitalOutputDevice(JACK_BUTTON_PIN , active_high=False)
@@ -150,6 +153,8 @@ class TrickOrTreat():
                 self._singing_trick()
             elif trick == "GHOST":
                 self._ghost_trick()
+            elif trick == "BLOOD":
+                self._blood_trick()
             elif trick is None:
                 time.sleep(0.01)
             else:
@@ -200,7 +205,13 @@ class TrickOrTreat():
         self.singing.on()
         time.sleep(BUTTON_PRESS_DELAY)
         self.singing.off()
-
+    
+    def _blood_trick(self):
+        self.blood_switch.on()
+        while (time.time() - self.trick_end_time) < 0:
+            time.sleep(0.01)
+        self.blood_switch.off()
+        
     def _bird_trick(self):
         # Make bird flap wings
         self.bird.on()
