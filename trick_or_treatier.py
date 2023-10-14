@@ -16,15 +16,15 @@ logging.basicConfig(
 )
 
 # CONSTANTS
-TRICK_TIME = 15
+TRICK_TIME = 10
 TREAT_TIME = 0.2
 DRINK_TIME = 1
-LIGHTS_TIME = 0.8
+LIGHTS_TIME = 1.0
 ROLL_TIME = 3
 ROLL_STEP_TIME = 0.01
 BUTTON_PRESS_DELAY = 0.1
 BIRD_TIME = 3
-EYE_TIME = 60
+EYE_TIME = 30
 BIRD_TIME = 45
 SPHERO_SPEED = 100  # int: (0 - 255)
 CANDY_SPEED = 0.3  # float: (0 - 1)
@@ -37,7 +37,7 @@ TRICKS = [
     "BLOOD"
 ]
 # GPIO PINS
-JACK_BUTTON_PIN = 12
+# JACK_BUTTON_PIN = 12
 TREAT_BUTTON_PIN = 2
 TRICK_BUTTON_PIN = 3
 DRINK_BUTTON_PIN = 25
@@ -47,15 +47,18 @@ TREAT_MOTOR_FORWARD_PIN = 17
 TREAT_MOTOR_BACKWARD_PIN = 27
 DRINK_MOTOR_FORWARD_PIN = 23
 DRINK_MOTOR_BACKWARD_PIN = 24
-BUBBLE_SWITCH = 14
-BUBBLE_SWITCH_2 = 22
-SINGING_SWITCH = 6
-BLOOD_SWITCH = 8
+BUBBLE_SWITCH = 5
+BUBBLE_SWITCH_2 = 12
+# SINGING_SWITCH = 6
+SINGING_SWITCH = 13
+# BLOOD_SWITCH = 8
+BLOOD_SWITCH = 6
 LIGHTS_PIN_ON = 26
 LIGHTS_PIN_OFF = 19
 GHOST_PIN_ON = 10
 GHOST_PIN_OFF = 9
-BIRD_PIN = 13
+# BIRD_PIN = 13
+BIRD_PIN = 8
 
 # Trick or Treat object to handle devices
 class TrickOrTreat():
@@ -105,7 +108,7 @@ class TrickOrTreat():
         self.blood_switch = DigitalOutputDevice(BLOOD_SWITCH, active_high=False)
         self.bubble_switch = DigitalOutputDevice(BUBBLE_SWITCH, active_high=False)
         self.bubble_switch_2 = DigitalOutputDevice(BUBBLE_SWITCH_2, active_high=False)
-        self.jack_switch = DigitalOutputDevice(JACK_BUTTON_PIN , active_high=False)
+        # self.jack_switch = DigitalOutputDevice(JACK_BUTTON_PIN , active_high=False)
         # Setup tricks threads
         self.trick_thread = threading.Thread(target=self._handle_tricks)
         self.treat_thread = threading.Thread(target=self._handle_treats)
@@ -118,11 +121,12 @@ class TrickOrTreat():
             # Run continuous tricks
             if self.sphero:
                 if (time.time() - self.time_since_eye) > EYE_TIME:
+                    print("running sphero trick")
                     self._sphero_trick()
                     self.time_since_eye = time.time()
-            if (time.time() - self.time_since_bird) > BIRD_TIME:
-                self._bird_trick()
-                self.time_since_bird = time.time()
+            # if (time.time() - self.time_since_bird) > BIRD_TIME:
+            #     self._bird_trick()
+            #     self.time_since_bird = time.time()
         
     def _handle_drinks(self):
         while self.running:
@@ -174,14 +178,20 @@ class TrickOrTreat():
         self.ghost_on.off()
         while (time.time() - self.trick_end_time) < 0:
             time.sleep(0.01)
+        # Press on button again
+        self.ghost_on.on()
+        time.sleep(BUTTON_PRESS_DELAY)
+        self.ghost_on.off()
+        time.sleep(BUTTON_PRESS_DELAY)
+        # Then press off button again
         self.ghost_off.on()
         time.sleep(BUTTON_PRESS_DELAY)
         self.ghost_off.off()
 
     def _lights_trick(self):
-        self.jack_switch.on()
-        time.sleep(BUTTON_PRESS_DELAY)
-        self.jack_switch.off()
+        # self.jack_switch.on()
+        # time.sleep(BUTTON_PRESS_DELAY)
+        # self.jack_switch.off()
         while (time.time() - self.trick_end_time) < 0:
             self.lights_off.on()
             time.sleep(BUTTON_PRESS_DELAY)
@@ -191,9 +201,9 @@ class TrickOrTreat():
             time.sleep(BUTTON_PRESS_DELAY)
             self.lights_on.off()
             time.sleep(LIGHTS_TIME)
-        self.jack_switch.on()
-        time.sleep(BUTTON_PRESS_DELAY)
-        self.jack_switch.off()
+        # self.jack_switch.on()
+        # time.sleep(BUTTON_PRESS_DELAY)
+        # self.jack_switch.off()
 
     def _singing_trick(self):
         # Press button on singing toy
@@ -280,6 +290,7 @@ class TrickOrTreat():
                 logging.info("treat")
                 self.treat_queue.put("CANDY")
             elif drink_pressed:
+                print("drink pressed")
                 logging.info("drink")
                 self.drink_queue.put("DRINK")
             elif trick_pressed:
@@ -293,15 +304,13 @@ class TrickOrTreat():
             else:
                 # Don't run too fast
                 time.sleep(0.01)
+        print("end of run")
 
     def stop(self):
         self.running = False
         if self.sphero is not None:
             self.sphero.disconnect()
-        self.trick_thread.stop()
-        self.treat_thread.stop()
-        self.continuous_trick_thread.stop()
-        self.drink_thread.stop()
+        print("end of stop")
 
 if __name__ == '__main__':
     # EB:B6:31:82:7C:F0
