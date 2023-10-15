@@ -29,6 +29,7 @@ BIRD_TIME = 45
 SPHERO_SPEED = 100  # int: (0 - 255)
 CANDY_SPEED = 0.3  # float: (0 - 1)
 DRINK_SPEED = 0.8  # float: (0 - 1)
+BLOOD_SPEED = 0.3  # float: (0 - 1)
 TRICKS = [
     "BUBBLE",
     "LIGHTS",
@@ -47,18 +48,16 @@ TREAT_MOTOR_FORWARD_PIN = 17
 TREAT_MOTOR_BACKWARD_PIN = 27
 DRINK_MOTOR_FORWARD_PIN = 23
 DRINK_MOTOR_BACKWARD_PIN = 24
+BLOOD_MOTOR_FORWARD_PIN = 7
+BLOOD_MOTOR_BACKWARD_PIN = 8
 BUBBLE_SWITCH = 5
 BUBBLE_SWITCH_2 = 12
-# SINGING_SWITCH = 6
-SINGING_SWITCH = 13
-# BLOOD_SWITCH = 8
-BLOOD_SWITCH = 6
+SINGING_SWITCH = 6
 LIGHTS_PIN_ON = 26
 LIGHTS_PIN_OFF = 19
 GHOST_PIN_ON = 10
 GHOST_PIN_OFF = 9
-# BIRD_PIN = 13
-BIRD_PIN = 8
+BIRD_PIN = 13
 
 # Trick or Treat object to handle devices
 class TrickOrTreat():
@@ -74,6 +73,10 @@ class TrickOrTreat():
         self.treat_motor.stop()
         self.drink_motor = Motor(forward=DRINK_MOTOR_FORWARD_PIN,
                                  backward=DRINK_MOTOR_BACKWARD_PIN)
+        self.drink_motor.stop()
+        self.blood_motor = Motor(forward=BLOOD_MOTOR_FORWARD_PIN,
+                                 backward=BLOOD_MOTOR_BACKWARD_PIN)
+        self.blood_motor.stop()
         # Setup buttons
         self.drink_button = Button(DRINK_BUTTON_PIN)
         self.treat_button = Button(TREAT_BUTTON_PIN)
@@ -105,7 +108,6 @@ class TrickOrTreat():
         self.lights_on.off()
         self.bird = DigitalOutputDevice(BIRD_PIN, active_high=False)
         self.singing = DigitalOutputDevice(SINGING_SWITCH, active_high=False)
-        self.blood_switch = DigitalOutputDevice(BLOOD_SWITCH, active_high=False)
         self.bubble_switch = DigitalOutputDevice(BUBBLE_SWITCH, active_high=False)
         self.bubble_switch_2 = DigitalOutputDevice(BUBBLE_SWITCH_2, active_high=False)
         # self.jack_switch = DigitalOutputDevice(JACK_BUTTON_PIN , active_high=False)
@@ -217,10 +219,10 @@ class TrickOrTreat():
         self.singing.off()
     
     def _blood_trick(self):
-        self.blood_switch.on()
+        self.blood_motor.forward(BLOOD_SPEED)
         while (time.time() - self.trick_end_time) < 0:
             time.sleep(0.01)
-        self.blood_switch.off()
+        self.blood_motor.stop()
         
     def _bird_trick(self):
         # Make bird flap wings
