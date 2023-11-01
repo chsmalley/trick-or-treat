@@ -16,7 +16,7 @@ logging.basicConfig(
 )
 
 # CONSTANTS
-TRICK_TIME = 10
+TRICK_TIME = 13
 TREAT_TIME = 0.2
 DRINK_TIME = 1
 LIGHTS_TIME = 1.0
@@ -24,12 +24,12 @@ ROLL_TIME = 3
 ROLL_STEP_TIME = 0.01
 BUTTON_PRESS_DELAY = 0.1
 BIRD_TIME = 3
-EYE_TIME = 30
+EYE_TIME = 15
 BIRD_TIME = 45
 SPHERO_SPEED = 100  # int: (0 - 255)
 CANDY_SPEED = 0.3  # float: (0 - 1)
-DRINK_SPEED = 0.8  # float: (0 - 1)
-BLOOD_SPEED = 0.3  # float: (0 - 1)
+DRINK_SPEED = 0.7  # float: (0 - 1)
+BLOOD_SPEED = 0.5  # float: (0 - 1)
 TRICKS = [
     "BUBBLE",
     "LIGHTS",
@@ -57,7 +57,8 @@ LIGHTS_PIN_ON = 26
 LIGHTS_PIN_OFF = 19
 GHOST_PIN_ON = 10
 GHOST_PIN_OFF = 9
-BIRD_PIN = 13
+BIRD_PIN = 22
+GHOST_PIN = 13
 
 # Trick or Treat object to handle devices
 class TrickOrTreat():
@@ -100,6 +101,7 @@ class TrickOrTreat():
         # Setup other tricks
         self.ghost_on = DigitalOutputDevice(GHOST_PIN_ON, active_high=False)
         self.ghost_off = DigitalOutputDevice(GHOST_PIN_OFF, active_high=False)
+        self.ghost = DigitalOutputDevice(GHOST_PIN, active_high=False)
         self.lights_on = DigitalOutputDevice(LIGHTS_PIN_ON, active_high=False)
         self.lights_off = DigitalOutputDevice(LIGHTS_PIN_OFF, active_high=False)
         # Start by turning on the lights
@@ -175,6 +177,7 @@ class TrickOrTreat():
         self.bubble_switch_2.off()
 
     def _ghost_trick(self):
+        self.ghost.on()
         self.ghost_on.on()
         time.sleep(BUTTON_PRESS_DELAY)
         self.ghost_on.off()
@@ -189,6 +192,7 @@ class TrickOrTreat():
         self.ghost_off.on()
         time.sleep(BUTTON_PRESS_DELAY)
         self.ghost_off.off()
+        self.ghost.off()
 
     def _lights_trick(self):
         # self.jack_switch.on()
