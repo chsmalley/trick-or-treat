@@ -1,5 +1,4 @@
 from gpiozero import Motor
-import keyboard
 import time
 
 # Define GPIO pins for motors
@@ -32,37 +31,26 @@ def main():
 
     try:
         while True:
-            if keyboard.is_pressed("1"):
+            user_input = input("enter command: ").strip.split()
+            motor, speed = user_input
+            if motor == "a":
                 current_motor = motor1
-            if keyboard.is_pressed("2"):
+            if motor == "b":
                 current_motor = motor2
             if current_motor:
-                if keyboard.is_pressed('up'):
-                    if current_motor == motor1:
-                        motor1_speed = min(motor1_speed + 0.1, 1.0)
-                        print(f"Motor 1 Speed: {motor1_speed:.1f}")
-                        set_motor_speed(motor2, motor2_speed)
-                    elif current_motor == motor2:
-                        motor2_speed = min(motor2_speed + 0.1, 1.0)
-                        print(f"Motor 2 Speed: {motor2_speed:.1f}")
-                        set_motor_speed(motor2, motor2_speed)
-                    else:
-                        print("no motor selected")
-                    time.sleep(0.1)  # Debounce delay
-                if keyboard.is_pressed('down'):
-                    if current_motor == motor1:
-                        motor1_speed = max(motor1_speed - 0.1, -1.0)
-                        print(f"Motor 1 Speed: {motor1_speed:.1f}")
-                        set_motor_speed(motor2, motor2_speed)
-                    elif current_motor == motor2:
-                        motor2_speed = max(motor2_speed - 0.1, -1.0)
-                        print(f"Motor 2 Speed: {motor2_speed:.1f}")
-                        set_motor_speed(motor2, motor2_speed)
-                    else:
-                        print("no motor selected")
-                    time.sleep(0.1)  # Debounce delay
+                if current_motor == motor1:
+                    motor1_speed = speed
+                    print(f"Motor 1 Speed: {motor1_speed:.1f}")
+                    set_motor_speed(motor2, motor2_speed)
+                elif current_motor == motor2:
+                    motor2_speed = speed
+                    print(f"Motor 2 Speed: {motor2_speed:.1f}")
+                    set_motor_speed(motor2, motor2_speed)
+                else:
+                    print("no motor selected")
+                time.sleep(0.1)  # Debounce delay
 
-            if keyboard.is_pressed('q'):
+            if user_input == "q":
                 print("Quitting...")
                 break
 
