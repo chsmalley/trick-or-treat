@@ -9,10 +9,11 @@ MOTOR2_BACKWARD_PIN = 24
 
 def set_motor_speed(motor, speed):
     """Set the speed of the motor (0.0 to 1.0)."""
-    if speed > 0 and speed <= 1:
-        motor.forward(speed)
-    elif speed >= -1 and speed < 0:
-        motor.backward(abs(speed))
+    if speed >= -1 and speed <= 1:
+        if speed >= 0:
+            motor.forward(speed)
+        else:
+            motor.backward(abs(speed))
     else:
         print("Speed must be between -1.0 and 1.0")
 
@@ -21,9 +22,8 @@ def main():
     motor1 = Motor(forward=MOTOR1_FORWARD_PIN, backward=MOTOR1_BACKWARD_PIN)
     motor2 = Motor(forward=MOTOR2_FORWARD_PIN, backward=MOTOR2_BACKWARD_PIN)
     print("Control Motor Speeds:")
-    print("Press number to select motor")
-    print("Press up arrow to increase speed")
-    print("Press down arrow to decrease speed")
+    print("Enter the motor and then the speed")
+    print("example: a 0.8")
 
     motor1_speed = 0.0
     motor2_speed = 0.0
@@ -31,8 +31,11 @@ def main():
 
     try:
         while True:
-            user_input = input("enter command: ").strip.split()
+            user_input = input("enter command: ").strip().split()
             motor, speed = user_input
+            speed = float(speed)
+            print(f"motor: {motor}")
+            print(f"speed: {speed}")
             if motor == "a":
                 current_motor = motor1
             if motor == "b":
