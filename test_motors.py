@@ -2,10 +2,10 @@ from gpiozero import Motor
 import time
 
 # Define GPIO pins for motors
-MOTOR1_FORWARD_PIN = 17
-MOTOR1_BACKWARD_PIN = 27
-MOTOR2_FORWARD_PIN = 23
-MOTOR2_BACKWARD_PIN = 24
+MOTOR1_FORWARD_PIN = 20
+MOTOR1_BACKWARD_PIN = 21
+MOTOR2_FORWARD_PIN = 2
+MOTOR2_BACKWARD_PIN = 3
 
 def set_motor_speed(motor, speed):
     """Set the speed of the motor (0.0 to 1.0)."""
@@ -43,11 +43,11 @@ def main():
             if current_motor:
                 if current_motor == motor1:
                     motor1_speed = speed
-                    print(f"Motor 1 Speed: {motor1_speed:.1f}")
+                    print(f"Motor A Speed: {motor1_speed:.1f}")
                     set_motor_speed(motor2, motor2_speed)
                 elif current_motor == motor2:
                     motor2_speed = speed
-                    print(f"Motor 2 Speed: {motor2_speed:.1f}")
+                    print(f"Motor B Speed: {motor2_speed:.1f}")
                     set_motor_speed(motor2, motor2_speed)
                 else:
                     print("no motor selected")
