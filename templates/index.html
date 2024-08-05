@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Halloween Data</title>
+        <!-- Include Plotly's JavaScript library -->
+	<!-- <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>  -->
+    <style>
+        button {
+            width: 150px;
+            height: 50px;
+            margin: 5px;
+        }
+    </style>
+</head>
+<body>
+    <form action="/measure" method="post">
+        <button type="submit">Measure Plants</button>
+        <button type="submit" formaction="/water">Water Plants</button>
+    <h1>Moisture data plot</h1>
+    <div id="plot-div">
+        {{ plot_div|safe }}
+    </div>
+    <h1>Plants</h1>
+    <img src="{{ url_for('show_image') }}" width="640" height="480" />
+</body>
+</html>
+
