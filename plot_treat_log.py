@@ -2,17 +2,6 @@ import pandas as pd
 import sys
 
 
-def get_sec(time_str):
-    """Get seconds from time."""
-    h, m, s = time_str["time"].split(':')
-    return int(h) * 3600 + int(m) * 60 + int(s)
-
-def get_hour(time_str):
-    """Get seconds from time."""
-    h, m, s = time_str["time"].split(':')
-    return h
-
-
 if __name__ == "__main__":
     logfile = sys.argv[1]
     df = pd.read_csv(
