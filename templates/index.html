@@ -13,15 +13,10 @@
     </style>
 </head>
 <body>
-    <form action="/measure" method="post">
-        <button type="submit">Measure Plants</button>
-        <button type="submit" formaction="/water">Water Plants</button>
-    <h1>Moisture data plot</h1>
+    <h1>Halloween data plot</h1>
     <div id="plot-div">
         {{ plot_div|safe }}
     </div>
-    <h1>Plants</h1>
-    <img src="{{ url_for('show_image') }}" width="640" height="480" />
 </body>
 </html>
 
