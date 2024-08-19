@@ -32,16 +32,16 @@ DRINK_SPEED = 0.7  # float: (0 - 1)
 BLOOD_SPEED = 0.5  # float: (0 - 1)
 TRICKS = [
     "BUBBLE",
-    "LIGHTS",
+    "PINGPONG",
     "SINGING",
     "GHOST",
     "BLOOD"
 ]
 # GPIO PINS
-# JACK_BUTTON_PIN = 12
 TREAT_BUTTON_PIN = 2
 TRICK_BUTTON_PIN = 3
 DRINK_BUTTON_PIN = 25
+PING_PONG_PIN = 16
 TREAT_LED_PIN = 20
 TRICK_LED_PIN = 21
 TREAT_MOTOR_FORWARD_PIN = 17
@@ -50,8 +50,8 @@ DRINK_MOTOR_FORWARD_PIN = 23
 DRINK_MOTOR_BACKWARD_PIN = 24
 BLOOD_MOTOR_FORWARD_PIN = 7
 BLOOD_MOTOR_BACKWARD_PIN = 8
-BUBBLE_SWITCH = 5
-BUBBLE_SWITCH_2 = 12
+BUBBLE_SWITCH = 12
+BUBBLE_SWITCH_2 = 5
 SINGING_SWITCH = 6
 LIGHTS_PIN_ON = 26
 LIGHTS_PIN_OFF = 19
@@ -102,6 +102,7 @@ class TrickOrTreat():
         self.ghost_on = DigitalOutputDevice(GHOST_PIN_ON, active_high=False)
         self.ghost_off = DigitalOutputDevice(GHOST_PIN_OFF, active_high=False)
         self.ghost = DigitalOutputDevice(GHOST_PIN, active_high=False)
+        self.ping_pong = DigitalOutputDevice(PING_PONG_PIN, active_high=False)
         self.lights_on = DigitalOutputDevice(LIGHTS_PIN_ON, active_high=False)
         self.lights_off = DigitalOutputDevice(LIGHTS_PIN_OFF, active_high=False)
         # Start by turning on the lights
@@ -137,7 +138,7 @@ class TrickOrTreat():
             drink = self.drink_queue.get()
             if drink == "DRINK":
                 self._drink()
-        
+
     def _handle_treats(self):
         while self.running:
             treat = self.treat_queue.get()
@@ -155,8 +156,8 @@ class TrickOrTreat():
                 print(f"trick button pressed. Performing trick: {trick}")
             if trick == "BUBBLE":
                 self._bubble_trick()
-            elif trick == "LIGHTS":
-                self._lights_trick()
+            elif trick == "PINGPONG":
+                self._ping_pong_trick()
             elif trick == "SINGING":
                 self._singing_trick()
             elif trick == "GHOST":
@@ -194,10 +195,13 @@ class TrickOrTreat():
         self.ghost_off.off()
         self.ghost.off()
 
+    def _ping_pong_trick(self):
+        self.ping_pong.on()
+        while (time.time() - self.trick_end_time) < 0:
+            time.sleep(0.01)
+        self.ping_pong.off()
+
     def _lights_trick(self):
-        # self.jack_switch.on()
-        # time.sleep(BUTTON_PRESS_DELAY)
-        # self.jack_switch.off()
         while (time.time() - self.trick_end_time) < 0:
             self.lights_off.on()
             time.sleep(BUTTON_PRESS_DELAY)
@@ -207,9 +211,6 @@ class TrickOrTreat():
             time.sleep(BUTTON_PRESS_DELAY)
             self.lights_on.off()
             time.sleep(LIGHTS_TIME)
-        # self.jack_switch.on()
-        # time.sleep(BUTTON_PRESS_DELAY)
-        # self.jack_switch.off()
 
     def _singing_trick(self):
         # Press button on singing toy
