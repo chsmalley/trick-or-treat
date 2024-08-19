@@ -113,7 +113,6 @@ class TrickOrTreat():
         self.singing = DigitalOutputDevice(SINGING_SWITCH, active_high=False)
         self.bubble_switch = DigitalOutputDevice(BUBBLE_SWITCH, active_high=False)
         self.bubble_switch_2 = DigitalOutputDevice(BUBBLE_SWITCH_2, active_high=False)
-        # self.jack_switch = DigitalOutputDevice(JACK_BUTTON_PIN , active_high=False)
         # Setup tricks threads
         self.trick_thread = threading.Thread(target=self._handle_tricks)
         self.treat_thread = threading.Thread(target=self._handle_treats)
