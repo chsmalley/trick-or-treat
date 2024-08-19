@@ -4,6 +4,7 @@ import pandas as pd
 import picamera
 import os
 import time
+import io
 import subprocess
 
 HALLOWEEN_FILE = '~/trick_or_treat.log'
