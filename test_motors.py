@@ -2,8 +2,8 @@ from gpiozero import Motor
 import time
 
 # Define GPIO pins for motors
-MOTOR1_FORWARD_PIN = 20
-MOTOR1_BACKWARD_PIN = 21
+MOTOR1_FORWARD_PIN = 17
+MOTOR1_BACKWARD_PIN = 27
 MOTOR2_FORWARD_PIN = 2
 MOTOR2_BACKWARD_PIN = 3
 
