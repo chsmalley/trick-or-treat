@@ -3,13 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Log Plot</title>
+    <title>Halloween Plot</title>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 </head>
 <body>
-    <h1>Log Level Counts</h1>
+    <h1>Plots of tricks and treats</h1>
     <div>
-        {{ plot_div|safe }}
+    	{{ plot_div|safe }}
     </div>
+ 
+    <script>
+        async function fetchData() {
+            const response = await fetch('/data');
+            const result = await response.json();
+
+            const data = [
+                {
+                    x: result.dates,
+                    y: result.tricks,
+                    type: 'bar',
+                    name: 'Tricks'
+                },
+                {
+                    x: result.dates,
+                    y: result.treats,
+                    type: 'bar',
+                    name: 'Treats'
+                }
+            ];
+
+            const layout = {
+                title: 'Halloween Results',
+                xaxis: {
+                    title: 'Datetime',
+                    tickformat: '%Y-%m-%d %H:%M:%S',
+                    tickmode: 'auto',
+                    nticks: 20
+                },
+                yaxis: {
+                    title: 'Count'
+                }
+            };
+
+            Plotly.newPlot('plot', data, layout);
+        }
+        // Fetch data every 5 seconds
+        setInterval(fetchData, 5000);
+
+        // Initial data fetch
+        fetchData();
+    </script>
+
 </body>
 </html>
