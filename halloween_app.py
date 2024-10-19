@@ -24,7 +24,6 @@ def index():
     df["tricks"] = df["type"] == "trick"
     df_tmp = df[["tricks", "treats"]].groupby(
             pd.Grouper(freq="15Min")).sum()
-    
     # Creating a Plotly figure for the data
     fig = go.Figure()
     fig.add_trace(go.Bar(

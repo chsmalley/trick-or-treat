@@ -3,40 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Real-Time Logging Plot</title>
+    <title>Halloween Plot</title>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 </head>
 <body>
-    <h1>Real-Time Logging Data Plot</h1>
-    <div id="plot" style="width:100%;height:100%;"></div>
-    
-    <script>
-        function fetchData() {
-            fetch('/data')
-                .then(response => response.json())
-                .then(data => {
-                    const times = data.map(entry => entry.Time);
-                    const values = data.map(entry => entry.Value);
-                    
-                    const trace = {
-                        x: times,
-                        y: values,
-                        mode: 'lines+markers',
-                        type: 'scatter'
-                    };
-                    
-                    const layout = {
-                        title: 'Logging Data Over Time',
-                        xaxis: { title: 'Time' },
-                        yaxis: { title: 'Value' }
-                    };
-
-                    Plotly.newPlot('plot', [trace], layout);
-                });
-        }
-
-        setInterval(fetchData, 1000);  // Fetch data every second
-        fetchData();  // Initial fetch
-    </script>
+    <h1>Plots of tricks and treats</h1>
+    <div>
+    	{{ plot_div|safe }}
+    </div>
 </body>
 </html>
