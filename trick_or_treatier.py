@@ -18,7 +18,6 @@ logging.basicConfig(
 # CONSTANTS
 TRICK_TIME = 13
 TREAT_TIME = 0.2
-DRINK_TIME = 1
 LIGHTS_TIME = 1.0
 ROLL_TIME = 3
 ROLL_STEP_TIME = 0.01
@@ -27,7 +26,6 @@ EYE_TIME = 15
 BIRD_TIME = 45
 SPHERO_SPEED = 100  # int: (0 - 255)
 CANDY_SPEED = 0.3  # float: (0 - 1)
-DRINK_SPEED = 0.7  # float: (0 - 1)
 BLOOD_SPEED = 0.5  # float: (0 - 1)
 STIR_SPEED = 0.2  # float: (0 - 1)
 TRICKS = [
@@ -40,12 +38,19 @@ TRICKS = [
     "TOY",
     "STIR"
 ]
+TRICK_TIMES = {
+    "BUBBLE": 10,
+    "PINGPONG": 5,
+    "BAT": 10,
+    "TOY": 5,
+    "STIR": 10
+}
 # GPIO PINS
-TREAT_BUTTON_PIN = 0
-TRICK_BUTTON_PIN = 0
-GHOST_BUTTON_PIN = 0
-TREAT_LED_PIN = 0
-TRICK_LED_PIN = 0
+TREAT_BUTTON_PIN = 14  
+TRICK_BUTTON_PIN = 18
+# GHOST_BUTTON_PIN = 0
+TREAT_LED_PIN = 15
+TRICK_LED_PIN = 22
 TREAT_MOTOR_FORWARD_PIN = 17
 TREAT_MOTOR_BACKWARD_PIN = 27
 STIR_MOTOR_FORWARD_PIN = 7
@@ -63,7 +68,6 @@ TOY_PIN = 24
 class TrickOrTreat():
     def __init__(self, sphero_mac: str):
         self.running = False
-        self.drink_queue = queue.Queue()
         self.current_trick = None
         self.trick_end_time = time.time()
         self.treat_queue = queue.Queue()
@@ -75,10 +79,9 @@ class TrickOrTreat():
                                 backward=STIR_MOTOR_BACKWARD_PIN)
         self.stir_motor.stop()
         # Setup buttons
-        self.ghost_button = Button(GHOST_BUTTON_PIN)
+        # self.ghost_button = Button(GHOST_BUTTON_PIN)
         self.treat_button = Button(TREAT_BUTTON_PIN)
         self.trick_button = Button(TRICK_BUTTON_PIN)
-        self.prev_drink_button = False
         self.prev_trick_button = False
         self.prev_treat_button = False
         # Setup LEDs
@@ -300,7 +303,7 @@ class TrickOrTreat():
                 if not self.current_trick:
                     logging.info("trick")
                     self.current_trick = next(self.tricks)
-                    self.trick_end_time = time.time() + TRICK_TIME
+                    self.trick_end_time = time.time() + TRICK_TIMES[self.current_trick]
                 else:
                     self.current_trick = None
                     self.trick_end_time = time.time()
