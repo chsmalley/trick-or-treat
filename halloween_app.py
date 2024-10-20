@@ -59,7 +59,8 @@ def data():
 
 @app.route('/plot')
 def plot():
-    df = pd.read_json(parse_log_file())
+    # df = pd.read_json(parse_log_file())
+    df = parse_log_file()
     # _, log_levels = parse_log_file()
     # level_counts = {level: log_levels.count(level) for level in set(log_levels)}
 

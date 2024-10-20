@@ -3,15 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Halloween Plot</title>
+    <title>Happy Halloween</title>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 </head>
 <body>
     <h1>Plots of tricks and treats</h1>
+    <!--
     <div>
     	{{ plot_div|safe }}
     </div>
- 
+    -->
+    <div id="plot"></div>
+
     <script>
         async function fetchData() {
             const response = await fetch('/data');
@@ -33,7 +36,7 @@
             ];
 
             const layout = {
-                title: 'Halloween Results',
+                title: 'Halloween Tricks and Treats',
                 xaxis: {
                     title: 'Datetime',
                     tickformat: '%Y-%m-%d %H:%M:%S',
