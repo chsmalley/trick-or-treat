@@ -30,10 +30,6 @@ logging.basicConfig(
     level=logging.INFO
 )
 
-app = Flask(__name__)
-app.logger.removeHandler(default_handler)
-# app.logger.setLevel(logging.ERROR)
-
 def parse_log_file():
     df = pd.read_csv(
         HALLOWEEN_FILE,
@@ -188,6 +184,13 @@ TOY_PIN = 24
 # Trick or Treat object to handle devices
 class TrickOrTreat():
     def __init__(self, sphero_mac: str):
+        # initialize app
+        print("app start")
+        app_thread = threading.Thread(target=run_flask_app)
+        app_thread.daemon = True
+        app_thread.start()
+        
+        
         self.running = False
         self.current_trick = None
         self.trick_end_time = time.time()
@@ -241,6 +244,10 @@ class TrickOrTreat():
         self.continuous_trick_thread = \
             threading.Thread(target=self._handle_continuous_tricks)
         
+
+    def run_flask_app():
+        app.run(debug=True, host='0.0.0.0', port=5001)
+    
     def _handle_continuous_tricks(self):
         while self.running:
             # Run continuous tricks
@@ -414,7 +421,6 @@ class TrickOrTreat():
             trick_pressed = self.prev_trick_button and not self.trick_button.is_pressed
             self.prev_treat_button = self.treat_button.is_pressed
             self.prev_trick_button = self.trick_button.is_pressed
-            # print(f"prev: {self.prev_treat_button}, curr: {self.treat_button.is_pressed}")
             if time.time() > self.trick_end_time:
                 self.current_trick = None
             if treat_pressed:
@@ -439,6 +445,7 @@ class TrickOrTreat():
             self.sphero.disconnect()
         print("end of stop")
 
+
 if __name__ == '__main__':
     # EB:B6:31:82:7C:F0
     sphero_mac = sys.argv[1]
@@ -447,10 +454,8 @@ if __name__ == '__main__':
     trick_or_treat = TrickOrTreat(sphero_mac)
     # trick_or_treat = TrickOrTreat("")
     try:
-        trick_or_treat.run()
         print("trick or treat start")
-        app.run(debug=True, host='0.0.0.0', port=5001)
-        print("app start")
+        trick_or_treat.run()
     except KeyboardInterrupt:
         trick_or_treat.stop()
     print("\ngoodbye")
