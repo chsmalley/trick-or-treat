@@ -1,4 +1,5 @@
 from flask import Flask, render_template, jsonify
+from flask.logging import default_handler
 import plotly.graph_objs as go
 import pandas as pd
 import datetime
@@ -10,7 +11,8 @@ import time
 import io
 import subprocess
 
-HALLOWEEN_FILE = '~/trick_or_treat.log'
+HALLOWEEN_FILE = '~/Documents/trick-or-treat/trick_or_treat.log'
+
 app = Flask(__name__)
 
 
@@ -149,5 +151,5 @@ def index():
 
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0')
+    app.run(debug=True, host='0.0.0.0', port=5001)
 

@@ -6,14 +6,135 @@ import random
 import threading
 import queue
 from itertools import cycle
+from flask import Flask, render_template, jsonify
+from flask.logging import default_handler
+import plotly.graph_objs as go
+import pandas as pd
+import datetime
+import re
+import json
+# import picamera
+import os
+import time
+import io
+import subprocess
 import logging
+
+HALLOWEEN_FILE = '~/Documents/trick-or-treat/trick_or_treat.log'
+
 
 logging.basicConfig(
     filename="trick_or_treat.log",
     format='%(asctime)s,%(levelname)s,%(message)s',
-    datefmt='%Y-%m-%d,%H:%M:%S',
+    datefmt='%Y:%m:%d:%H:%M:%S',
     level=logging.INFO
 )
+
+app = Flask(__name__)
+app.logger.removeHandler(default_handler)
+# app.logger.setLevel(logging.ERROR)
+
+def parse_log_file():
+    df = pd.read_csv(
+        HALLOWEEN_FILE,
+        names=["datetime", "loglevel", "type"]
+    )
+    df["datetime"] = pd.to_datetime(df["datetime"], format="%Y:%m:%d:%H:%M:%S")
+    df.set_index("datetime", drop=False, inplace=True)
+    df["treats"] = df["type"] == "treat"
+    df["tricks"] = df["type"] == "trick"
+    return df
+
+@app.route('/data')
+def data():
+    data_df = parse_log_file()
+    df_tmp = data_df[["tricks", "treats"]].groupby(
+            pd.Grouper(freq="15Min")).sum()
+    result = {
+        'dates': df_tmp.index.astype(str).tolist(),
+        'tricks': df_tmp['tricks'].tolist(),
+        'treats': df_tmp['treats'].tolist()
+    }
+    return json.dumps(result)
+
+@app.route('/plot')
+def plot():
+    df = parse_log_file()
+    df_tmp = df[["tricks", "treats"]].groupby(
+            pd.Grouper(freq="15Min")).sum()
+    
+    # Creating a Plotly figure for the data
+    fig = go.Figure()
+    fig.add_trace(go.Bar(
+        x=df_tmp.index,
+        y=df_tmp['tricks'],
+        name='Tricks'
+    ))
+    fig.add_trace(go.Bar(
+        x=df_tmp.index,
+        y=df_tmp['treats'],
+        name='Treats'
+    ))
+
+    fig.update_layout(
+        title='Halloween Results',
+        xaxis_title='Datetime',
+        yaxis_title='Count',
+        xaxis=dict(
+            tickformat='%Y:%m:%d:%H:%M:%S',  # Format of the x-axis datetime labels
+            tickmode='auto',
+            nticks=20  # Number of ticks on the x-axis
+        )
+    )
+
+    # Convert the Plotly figure to HTML and pass to template
+    plot_div = fig.to_html(full_html=False)
+    return render_template('index.html', plot_div=plot_div)
+
+# Route to display time series plot
+@app.route('/')
+def index():
+    df = pd.read_csv(
+        HALLOWEEN_FILE,
+        names=["datetime", "loglevel", "type"]
+    )
+    df["datetime"] = pd.to_datetime(df["datetime"],
+                                    format="%Y:%m:%d:%H:%M:%S")
+    df.set_index("datetime", drop=False, inplace=True)
+    df["treats"] = df["type"] == "treat"
+    df["tricks"] = df["type"] == "trick"
+    df_tmp = df[["tricks", "treats"]].groupby(
+            pd.Grouper(freq="15Min")).sum()
+    
+    # Creating a Plotly figure for the data
+    fig = go.Figure()
+    fig.add_trace(go.Bar(
+        x=df_tmp.index,
+        y=df_tmp['tricks'],
+        name='Tricks'
+    ))
+    fig.add_trace(go.Bar(
+        x=df_tmp.index,
+        y=df_tmp['treats'],
+        name='Treats'
+    ))
+
+    fig.update_layout(
+        title='Halloween Results',
+        xaxis_title='Datetime',
+        yaxis_title='Count',
+        xaxis=dict(
+            tickformat='%Y:%m:%d:%H:%M:%S',  # Format of the x-axis datetime labels
+            tickmode='auto',
+            nticks=20  # Number of ticks on the x-axis
+        )
+    )
+
+    # Convert the Plotly figure to HTML and pass to template
+    plot_div = fig.to_html(full_html=False)
+    return render_template('index.html', plot_div=plot_div)
+
+
 
 # CONSTANTS
 TRICK_TIME = 13
@@ -297,11 +418,11 @@ class TrickOrTreat():
             if time.time() > self.trick_end_time:
                 self.current_trick = None
             if treat_pressed:
-                logging.info("treat")
+                logging.warning("treat")
                 self.treat_queue.put("CANDY")
             elif trick_pressed:
                 if not self.current_trick:
-                    logging.info("trick")
+                    logging.warning("trick")
                     self.current_trick = next(self.tricks)
                     self.trick_end_time = time.time() + TRICK_TIMES[self.current_trick]
                 else:
@@ -327,6 +448,9 @@ if __name__ == '__main__':
     # trick_or_treat = TrickOrTreat("")
     try:
         trick_or_treat.run()
+        print("trick or treat start")
+        app.run(debug=True, host='0.0.0.0', port=5001)
+        print("app start")
     except KeyboardInterrupt:
         trick_or_treat.stop()
     print("\ngoodbye")
