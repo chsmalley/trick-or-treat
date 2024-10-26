@@ -6,18 +6,13 @@ import random
 import threading
 import queue
 from itertools import cycle
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template, redirect, url_for
 from flask.logging import default_handler
 import plotly.graph_objs as go
 import pandas as pd
-import datetime
-import re
 import json
 # import picamera
-import os
 import time
-import io
-import subprocess
 import logging
 
 HALLOWEEN_FILE = '~/Documents/trick-or-treat/trick_or_treat.log'
@@ -29,106 +24,6 @@ logging.basicConfig(
     datefmt='%Y:%m:%d:%H:%M:%S',
     level=logging.INFO
 )
-
-def parse_log_file():
-    df = pd.read_csv(
-        HALLOWEEN_FILE,
-        names=["datetime", "loglevel", "type"]
-    )
-    df["datetime"] = pd.to_datetime(df["datetime"], format="%Y:%m:%d:%H:%M:%S")
-    df.set_index("datetime", drop=False, inplace=True)
-    df["treats"] = df["type"] == "treat"
-    df["tricks"] = df["type"] == "trick"
-    return df
-
-@app.route('/data')
-def data():
-    data_df = parse_log_file()
-    df_tmp = data_df[["tricks", "treats"]].groupby(
-            pd.Grouper(freq="15Min")).sum()
-    result = {
-        'dates': df_tmp.index.astype(str).tolist(),
-        'tricks': df_tmp['tricks'].tolist(),
-        'treats': df_tmp['treats'].tolist()
-    }
-    return json.dumps(result)
-
-@app.route('/plot')
-def plot():
-    df = parse_log_file()
-    df_tmp = df[["tricks", "treats"]].groupby(
-            pd.Grouper(freq="15Min")).sum()
-    
-    # Creating a Plotly figure for the data
-    fig = go.Figure()
-    fig.add_trace(go.Bar(
-        x=df_tmp.index,
-        y=df_tmp['tricks'],
-        name='Tricks'
-    ))
-    fig.add_trace(go.Bar(
-        x=df_tmp.index,
-        y=df_tmp['treats'],
-        name='Treats'
-    ))
-
-    fig.update_layout(
-        title='Halloween Results',
-        xaxis_title='Datetime',
-        yaxis_title='Count',
-        xaxis=dict(
-            tickformat='%Y:%m:%d:%H:%M:%S',  # Format of the x-axis datetime labels
-            tickmode='auto',
-            nticks=20  # Number of ticks on the x-axis
-        )
-    )
-
-    # Convert the Plotly figure to HTML and pass to template
-    plot_div = fig.to_html(full_html=False)
-    return render_template('index.html', plot_div=plot_div)
-
-# Route to display time series plot
-@app.route('/')
-def index():
-    df = pd.read_csv(
-        HALLOWEEN_FILE,
-        names=["datetime", "loglevel", "type"]
-    )
-    df["datetime"] = pd.to_datetime(df["datetime"],
-                                    format="%Y:%m:%d:%H:%M:%S")
-    df.set_index("datetime", drop=False, inplace=True)
-    df["treats"] = df["type"] == "treat"
-    df["tricks"] = df["type"] == "trick"
-    df_tmp = df[["tricks", "treats"]].groupby(
-            pd.Grouper(freq="15Min")).sum()
-    
-    # Creating a Plotly figure for the data
-    fig = go.Figure()
-    fig.add_trace(go.Bar(
-        x=df_tmp.index,
-        y=df_tmp['tricks'],
-        name='Tricks'
-    ))
-    fig.add_trace(go.Bar(
-        x=df_tmp.index,
-        y=df_tmp['treats'],
-        name='Treats'
-    ))
-
-    fig.update_layout(
-        title='Halloween Results',
-        xaxis_title='Datetime',
-        yaxis_title='Count',
-        xaxis=dict(
-            tickformat='%Y:%m:%d:%H:%M:%S',  # Format of the x-axis datetime labels
-            tickmode='auto',
-            nticks=20  # Number of ticks on the x-axis
-        )
-    )
-
-    # Convert the Plotly figure to HTML and pass to template
-    plot_div = fig.to_html(full_html=False)
-    return render_template('index.html', plot_div=plot_div)
 
 
 
@@ -185,11 +80,8 @@ TOY_PIN = 24
 class TrickOrTreat():
     def __init__(self, sphero_mac: str):
         # initialize app
-        print("app start")
-        app_thread = threading.Thread(target=run_flask_app)
-        app_thread.daemon = True
-        app_thread.start()
-        
+        self.app = Flask(__name__)
+        self.app.logger.removeHandler(default_handler)
         
         self.running = False
         self.current_trick = None
@@ -244,9 +136,128 @@ class TrickOrTreat():
         self.continuous_trick_thread = \
             threading.Thread(target=self._handle_continuous_tricks)
         
+        # Set up routes using app.route
+        self.app.add_url_rule('/', 'index', self.index)
+        self.app.add_url_rule('/data', 'data', self.data)
+        self.app.add_url_rule('/plot', 'plot', self.plot)
+        self.app.add_url_rule('/web_trick', 'web_trick', self.web_trick)
+        self.app.add_url_rule('/web_treat', 'web_treat', self.web_treat)
+        self.web_trick_pressed = False
+        self.web_treat_pressed = False
+        self.web_thread = threading.Thread(target=self.run_flask_app)
 
-    def run_flask_app():
-        app.run(debug=True, host='0.0.0.0', port=5001)
+    def run_flask_app(self):
+        self.app.run(debug=True, host='0.0.0.0', port=5001)
+    
+    def parse_log_file(self):
+        df = pd.read_csv(
+            HALLOWEEN_FILE,
+            names=["datetime", "loglevel", "type"]
+        )
+        df["datetime"] = pd.to_datetime(df["datetime"], format="%Y:%m:%d:%H:%M:%S")
+        df.set_index("datetime", drop=False, inplace=True)
+        df["treats"] = df["type"] == "treat"
+        df["tricks"] = df["type"] == "trick"
+        return df
+
+    @self.app.route('/web_trick', methods=["POST"])
+    def web_trick(self):
+        self.web_trick_pressed = True
+        return redirect(url_for("index"))
+
+    @self.app.route('/web_treat', methods=["POST"])
+    def web_treat(self):
+        self.web_treat_pressed = True
+        return redirect(url_for("index"))
+
+    @self.app.route('/data')
+    def data(self):
+        data_df = self.parse_log_file()
+        df_tmp = data_df[["tricks", "treats"]].groupby(
+                pd.Grouper(freq="15Min")).sum()
+        result = {
+            'dates': df_tmp.index.astype(str).tolist(),
+            'tricks': df_tmp['tricks'].tolist(),
+            'treats': df_tmp['treats'].tolist()
+        }
+        return json.dumps(result)
+
+    @self.app.route('/plot')
+    def plot(self):
+        df = self.parse_log_file()
+        df_tmp = df[["tricks", "treats"]].groupby(
+                pd.Grouper(freq="15Min")).sum()
+
+        # Creating a Plotly figure for the data
+        fig = go.Figure()
+        fig.add_trace(go.Bar(
+            x=df_tmp.index,
+            y=df_tmp['tricks'],
+            name='Tricks'
+        ))
+        fig.add_trace(go.Bar(
+            x=df_tmp.index,
+            y=df_tmp['treats'],
+            name='Treats'
+        ))
+
+        fig.update_layout(
+            title='Halloween Results',
+            xaxis_title='Datetime',
+            yaxis_title='Count',
+            xaxis=dict(
+                tickformat='%Y:%m:%d:%H:%M:%S',  # Format of the x-axis datetime labels
+                tickmode='auto',
+                nticks=20  # Number of ticks on the x-axis
+            )
+        )
+
+        # Convert the Plotly figure to HTML and pass to template
+        plot_div = fig.to_html(full_html=False)
+        return render_template('index.html', plot_div=plot_div)
+
+    # Route to display time series plot
+    @self.app.route('/')
+    def index():
+        df = pd.read_csv(
+            HALLOWEEN_FILE,
+            names=["datetime", "loglevel", "type"]
+        )
+        df["datetime"] = pd.to_datetime(df["datetime"],
+                                        format="%Y:%m:%d:%H:%M:%S")
+        df.set_index("datetime", drop=False, inplace=True)
+        df["treats"] = df["type"] == "treat"
+        df["tricks"] = df["type"] == "trick"
+        df_tmp = df[["tricks", "treats"]].groupby(
+                pd.Grouper(freq="15Min")).sum()
+
+        # Creating a Plotly figure for the data
+        fig = go.Figure()
+        fig.add_trace(go.Bar(
+            x=df_tmp.index,
+            y=df_tmp['tricks'],
+            name='Tricks'
+        ))
+        fig.add_trace(go.Bar(
+            x=df_tmp.index,
+            y=df_tmp['treats'],
+            name='Treats'
+        ))
+
+        fig.update_layout(
+            title='Halloween Results',
+            xaxis_title='Datetime',
+            yaxis_title='Count',
+            xaxis=dict(
+                tickformat='%Y:%m:%d:%H:%M:%S',  # Format of the x-axis datetime labels
+                tickmode='auto',
+                nticks=20  # Number of ticks on the x-axis
+            )
+        )
+
+        # Convert the Plotly figure to HTML and pass to template
+        plot_div = fig.to_html(full_html=False)
+        return render_template('index.html', plot_div=plot_div)
     
     def _handle_continuous_tricks(self):
         while self.running:
@@ -413,6 +424,8 @@ class TrickOrTreat():
     def run(self):
         self.running = True
         # Start threads
+        self.web_thread.daemon = True
+        self.web_thread.start()
         self.continuous_trick_thread.start()
         self.trick_thread.start()
         self.treat_thread.start()
