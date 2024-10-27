@@ -70,11 +70,14 @@ LIGHTS_PIN_ON = 2
 LIGHTS_PIN_OFF = 3
 BAT_PIN = 23
 TOY_PIN = 24
-DOORBELL_PIN = 25
 
 # Trick or Treat object to handle devices
 class TrickOrTreat():
     def __init__(self, sphero_mac: str):
+        # initialize app
+        # self.app = Flask(__name__)
+        # self.app.logger.removeHandler(default_handler)
+        
         self.running = False
         self.current_trick = None
         self.trick_end_time = time.time()
@@ -105,30 +108,149 @@ class TrickOrTreat():
             self.time_since_eye = None
         self.tricks = cycle(TRICKS)
         # Setup other tricks
-        self.doorbell = DigitalOutputDevice(DOORBELL_PIN,
-                                            active_high=False)
         self.bat = DigitalOutputDevice(BAT_PIN, active_high=False)
         self.toy = DigitalOutputDevice(TOY_PIN, active_high=False)
-        self.ping_pong = DigitalOutputDevice(PING_PONG_PIN,
-                                             active_high=False)
-        self.lights_on = DigitalOutputDevice(LIGHTS_PIN_ON,
-                                             active_high=False)
-        self.lights_off = DigitalOutputDevice(LIGHTS_PIN_OFF,
-                                              active_high=False)
+        self.ping_pong = DigitalOutputDevice(PING_PONG_PIN, active_high=False)
+        self.lights_on = DigitalOutputDevice(LIGHTS_PIN_ON, active_high=False)
+        self.lights_off = DigitalOutputDevice(LIGHTS_PIN_OFF, active_high=False)
         # Start by turning on the lights
         self.lights_on.on()
         time.sleep(BUTTON_PRESS_DELAY)
         self.lights_on.off()
-        self.bubble_switch = DigitalOutputDevice(BUBBLE_SWITCH,
-                                                 active_high=False)
-        self.bubble_switch_2 = DigitalOutputDevice(BUBBLE_SWITCH_2,
-                                                   active_high=False)
+        self.bubble_switch = DigitalOutputDevice(BUBBLE_SWITCH, active_high=False)
+        self.bubble_switch_2 = DigitalOutputDevice(BUBBLE_SWITCH_2, active_high=False)
         # Setup tricks threads
         self.trick_thread = threading.Thread(target=self._handle_tricks)
         self.treat_thread = threading.Thread(target=self._handle_treats)
         self.continuous_trick_thread = \
             threading.Thread(target=self._handle_continuous_tricks)
+        self.run_trick_or_treat_thread = \
+            threading.Thread(target=self.run_trick_or_treat)
         
+        # Set up routes using app.route
+        # self.setup_routes()
+        # self.app.add_url_rule('/', 'index', self.index)
+        # self.app.add_url_rule('/data', 'data', self.data)
+        # self.app.add_url_rule('/plot', 'plot', self.plot)
+        # self.app.add_url_rule('/web_trick', 'web_trick', self.web_trick)
+        # self.app.add_url_rule('/web_treat', 'web_treat', self.web_treat)
+        self.web_trick_pressed = False
+        self.web_treat_pressed = False
+        # self.web_thread = threading.Thread(target=self.run_flask_app)
+
+    # def run_flask_app(self):
+    #     self.app.run(debug=True, host='0.0.0.0', port=5001)
+    
+    # def parse_log_file(self):
+    #     df = pd.read_csv(
+    #         HALLOWEEN_FILE,
+    #         names=["datetime", "loglevel", "type"]
+    #     )
+    #     df["datetime"] = pd.to_datetime(df["datetime"], format="%Y:%m:%d:%H:%M:%S")
+    #     df.set_index("datetime", drop=False, inplace=True)
+    #     df["treats"] = df["type"] == "treat"
+    #     df["tricks"] = df["type"] == "trick"
+    #     return df
+    
+    # def setup_routes(self):
+    #     @self.app.route('/web_trick', methods=["POST"])
+    #     def web_trick():
+    #         self.web_trick_pressed = True
+    #         return redirect(url_for("index"))
+
+    #     @self.app.route('/web_treat', methods=["POST"])
+    #     def web_treat():
+    #         self.web_treat_pressed = True
+    #         return redirect(url_for("index"))
+
+    #     @self.app.route('/data')
+    #     def data():
+    #         data_df = self.parse_log_file()
+    #         df_tmp = data_df[["tricks", "treats"]].groupby(
+    #                 pd.Grouper(freq="15Min")).sum()
+    #         result = {
+    #             'dates': df_tmp.index.astype(str).tolist(),
+    #             'tricks': df_tmp['tricks'].tolist(),
+    #             'treats': df_tmp['treats'].tolist()
+    #         }
+    #         return json.dumps(result)
+
+    #     @self.app.route('/plot')
+    #     def plot():
+    #         df = self.parse_log_file()
+    #         df_tmp = df[["tricks", "treats"]].groupby(
+    #                 pd.Grouper(freq="15Min")).sum()
+
+    #         # Creating a Plotly figure for the data
+    #         fig = go.Figure()
+    #         fig.add_trace(go.Bar(
+    #             x=df_tmp.index,
+    #             y=df_tmp['tricks'],
+    #             name='Tricks'
+    #         ))
+    #         fig.add_trace(go.Bar(
+    #             x=df_tmp.index,
+    #             y=df_tmp['treats'],
+    #             name='Treats'
+    #         ))
+
+    #         fig.update_layout(
+    #             title='Halloween Results',
+    #             xaxis_title='Datetime',
+    #             yaxis_title='Count',
+    #             xaxis=dict(
+    #                 tickformat='%Y:%m:%d:%H:%M:%S',  # Format of the x-axis datetime labels
+    #                 tickmode='auto',
+    #                 nticks=20  # Number of ticks on the x-axis
+    #             )
+    #         )
+
+    #         # Convert the Plotly figure to HTML and pass to template
+    #         plot_div = fig.to_html(full_html=False)
+    #         return render_template('index.html', plot_div=plot_div)
+
+    #     # Route to display time series plot
+    #     @self.app.route('/')
+    #     def index():
+    #         df = pd.read_csv(
+    #             HALLOWEEN_FILE,
+    #             names=["datetime", "loglevel", "type"]
+    #         )
+    #         df["datetime"] = pd.to_datetime(df["datetime"],
+    #                                         format="%Y:%m:%d:%H:%M:%S")
+    #         df.set_index("datetime", drop=False, inplace=True)
+    #         df["treats"] = df["type"] == "treat"
+    #         df["tricks"] = df["type"] == "trick"
+    #         df_tmp = df[["tricks", "treats"]].groupby(
+    #                 pd.Grouper(freq="15Min")).sum()
+
+    #         # Creating a Plotly figure for the data
+    #         fig = go.Figure()
+    #         fig.add_trace(go.Bar(
+    #             x=df_tmp.index,
+    #             y=df_tmp['tricks'],
+    #             name='Tricks'
+    #         ))
+    #         fig.add_trace(go.Bar(
+    #             x=df_tmp.index,
+    #             y=df_tmp['treats'],
+    #             name='Treats'
+    #         ))
+
+    #         fig.update_layout(
+    #             title='Halloween Results',
+    #             xaxis_title='Datetime',
+    #             yaxis_title='Count',
+    #             xaxis=dict(
+    #                 tickformat='%Y:%m:%d:%H:%M:%S',  # Format of the x-axis datetime labels
+    #                 tickmode='auto',
+    #                 nticks=20  # Number of ticks on the x-axis
+    #             )
+    #         )
+
+    #         # Convert the Plotly figure to HTML and pass to template
+    #         plot_div = fig.to_html(full_html=False)
+    #         return render_template('index.html', plot_div=plot_div)
     
     def _handle_continuous_tricks(self):
         while self.running:
@@ -178,6 +300,24 @@ class TrickOrTreat():
         self.bubble_switch.off()
         self.bubble_switch_2.off()
 
+    def _ghost_trick(self):
+        self.ghost.on()
+        self.ghost_on.on()
+        time.sleep(BUTTON_PRESS_DELAY)
+        self.ghost_on.off()
+        while (time.time() - self.trick_end_time) < 0:
+            time.sleep(0.01)
+        # Press on button again
+        self.ghost_on.on()
+        time.sleep(BUTTON_PRESS_DELAY)
+        self.ghost_on.off()
+        time.sleep(BUTTON_PRESS_DELAY)
+        # Then press off button again
+        self.ghost_off.on()
+        time.sleep(BUTTON_PRESS_DELAY)
+        self.ghost_off.off()
+        self.ghost.off()
+
     def _ping_pong_trick(self):
         self.ping_pong.on()
         while (time.time() - self.trick_end_time) < 0:
@@ -186,12 +326,8 @@ class TrickOrTreat():
 
     def _toy_trick(self):
         self.toy.on()
-        time.sleep(BUTTON_PRESS_DELAY)
-        self.toy.off()
         while (time.time() - self.trick_end_time) < 0:
             time.sleep(0.01)
-        self.toy.on()
-        time.sleep(BUTTON_PRESS_DELAY)
         self.toy.off()
 
     def _bat_trick(self):
@@ -211,10 +347,18 @@ class TrickOrTreat():
             self.lights_on.off()
             time.sleep(LIGHTS_TIME)
 
-    def _stir_trick(self):
-        self.doorbell.on()
+    def _singing_trick(self):
+        # Press button on singing toy
+        self.singing.on()
         time.sleep(BUTTON_PRESS_DELAY)
-        self.doorbell.off()
+        self.singing.off()
+        while (time.time() - self.trick_end_time) < 0:
+            time.sleep(0.01)
+        self.singing.on()
+        time.sleep(BUTTON_PRESS_DELAY)
+        self.singing.off()
+    
+    def _stir_trick(self):
         self.stir_motor.forward(STIR_SPEED)
         while (time.time() - self.trick_end_time) < 0:
             time.sleep(0.01)
@@ -223,10 +367,7 @@ class TrickOrTreat():
     def _sphero_trick2(self):
         self.sphero.setLEDColor(red=255, green=0, blue=0)
         for i in range(int(ROLL_TIME // ROLL_STEP_TIME)):
-            self.sphero.roll(
-                    SPHERO_SPEED,
-                    int(360 * i * ROLL_STEP_TIME / ROLL_TIME)
-            )
+            self.sphero.roll(SPHERO_SPEED, int(360 * i * ROLL_STEP_TIME / ROLL_TIME))
             self.sphero.wait(ROLL_STEP_TIME)
         self.sphero.roll(0, 0)
         self.sphero.wait(1)
@@ -257,33 +398,34 @@ class TrickOrTreat():
     def run(self):
         self.running = True
         # Start threads
+        # self.web_thread.daemon = True
+        # self.web_thread.start()
         self.continuous_trick_thread.start()
         self.trick_thread.start()
         self.treat_thread.start()
+        # self.run_trick_or_treat_thread.start()
         while self.running:
-            treat_pressed = self.prev_treat_button \
-                    and not self.treat_button.is_pressed
-            trick_pressed = self.prev_trick_button \
-                    and not self.trick_button.is_pressed
+            treat_pressed = self.prev_treat_button and not self.treat_button.is_pressed
+            trick_pressed = self.prev_trick_button and not self.trick_button.is_pressed
             self.prev_treat_button = self.treat_button.is_pressed
             self.prev_trick_button = self.trick_button.is_pressed
             if time.time() > self.trick_end_time:
                 self.current_trick = None
             if treat_pressed:
-                logging.info("treat")
+                logging.warning("treat")
                 self.treat_queue.put("CANDY")
             elif trick_pressed:
                 if not self.current_trick:
-                    logging.info("trick")
+                    logging.warning("trick")
                     self.current_trick = next(self.tricks)
-                    self.trick_end_time = time.time() + \
-                            TRICK_TIMES[self.current_trick]
+                    self.trick_end_time = time.time() + TRICK_TIMES[self.current_trick]
                 else:
                     self.current_trick = None
                     self.trick_end_time = time.time()
             else:
                 # Don't run too fast
                 time.sleep(0.01)
+        # self.app.run(debug=True, host='0.0.0.0', port=5001)
         print("end of run")
 
     def stop(self):
