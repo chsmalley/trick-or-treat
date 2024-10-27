@@ -11,7 +11,7 @@ import time
 import io
 import subprocess
 
-HALLOWEEN_FILE = '~/Documents/trick-or-treat/trick_or_treat.log'
+HALLOWEEN_FILE = '~/trick-or-treat/trick_or_treat.log'
 
 app = Flask(__name__)
 

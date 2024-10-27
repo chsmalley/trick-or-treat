@@ -15,7 +15,7 @@ import json
 import time
 import logging
 
-HALLOWEEN_FILE = '~/Documents/trick-or-treat/trick_or_treat.log'
+HALLOWEEN_FILE = '~/trick-or-treat/trick_or_treat.log'
 
 
 logging.basicConfig(
@@ -80,8 +80,8 @@ TOY_PIN = 24
 class TrickOrTreat():
     def __init__(self, sphero_mac: str):
         # initialize app
-        self.app = Flask(__name__)
-        self.app.logger.removeHandler(default_handler)
+        # self.app = Flask(__name__)
+        # self.app.logger.removeHandler(default_handler)
         
         self.running = False
         self.current_trick = None
@@ -135,9 +135,11 @@ class TrickOrTreat():
         self.treat_thread = threading.Thread(target=self._handle_treats)
         self.continuous_trick_thread = \
             threading.Thread(target=self._handle_continuous_tricks)
+        self.run_thread = \
+            threading.Thread(target=self.run_trick_or_treat)
         
         # Set up routes using app.route
-        self.setup_routes()
+        # self.setup_routes()
         # self.app.add_url_rule('/', 'index', self.index)
         # self.app.add_url_rule('/data', 'data', self.data)
         # self.app.add_url_rule('/plot', 'plot', self.plot)
@@ -145,10 +147,10 @@ class TrickOrTreat():
         # self.app.add_url_rule('/web_treat', 'web_treat', self.web_treat)
         self.web_trick_pressed = False
         self.web_treat_pressed = False
-        self.web_thread = threading.Thread(target=self.run_flask_app)
+        # self.web_thread = threading.Thread(target=self.run_flask_app)
 
-    def run_flask_app(self):
-        self.app.run(debug=True, host='0.0.0.0', port=5001)
+    # def run_flask_app(self):
+    #     self.app.run(debug=True, host='0.0.0.0', port=5001)
     
     def parse_log_file(self):
         df = pd.read_csv(
@@ -420,14 +422,7 @@ class TrickOrTreat():
         self.treat_motor.stop()
         self.treat_led.off()
     
-    def run(self):
-        self.running = True
-        # Start threads
-        self.web_thread.daemon = True
-        self.web_thread.start()
-        self.continuous_trick_thread.start()
-        self.trick_thread.start()
-        self.treat_thread.start()
+    def run_trick_or_treat(self):
         while self.running:
             treat_pressed = self.prev_treat_button and not self.treat_button.is_pressed
             trick_pressed = self.prev_trick_button and not self.trick_button.is_pressed
@@ -449,6 +444,17 @@ class TrickOrTreat():
             else:
                 # Don't run too fast
                 time.sleep(0.01)
+    
+    def run(self):
+        self.running = True
+        # Start threads
+        # self.web_thread.daemon = True
+        # self.web_thread.start()
+        self.continuous_trick_thread.start()
+        self.trick_thread.start()
+        self.treat_thread.start()
+        self.run_thread.start()
+        self.app.run(debug=True, host='0.0.0.0', port=5001)
         print("end of run")
 
     def stop(self):

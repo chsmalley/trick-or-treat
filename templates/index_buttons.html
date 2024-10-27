@@ -8,6 +8,14 @@
 </head>
 <body>
     <h1>Happy Halloween</h1>
+    <h1>Trick: {{ web_trick }}</h1>
+    <form action="{{ url_for('web_trick') }}" method="post">
+        <button type="submit">Web trick</button>
+    </form>    
+    <h1>Treat: {{ web_treat }}</h1>
+    <form action="{{ url_for('web_treat') }}" method="post">
+        <button type="submit">Web treat</button>
+    </form>    
     <!--
     <div>
     	{{ plot_div|safe }}
