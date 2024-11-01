@@ -41,14 +41,14 @@ STIR_SPEED = 0.2  # float: (0 - 1)
 TRICKS = [
     "BUBBLE",
     "PINGPONG",
-    "BAT",
+    # "BAT",
     "TOY",
     "STIR"
 ]
 TRICK_TIMES = {
     "BUBBLE": 10,
     "PINGPONG": 5,
-    "BAT": 10,
+    "BAT": 8,
     "TOY": 5,
     "STIR": 10
 }
@@ -62,7 +62,6 @@ TREAT_MOTOR_FORWARD_PIN = 17
 TREAT_MOTOR_BACKWARD_PIN = 27
 STIR_MOTOR_FORWARD_PIN = 7
 STIR_MOTOR_BACKWARD_PIN = 8
-SINGING_SWITCH = 6
 PING_PONG_PIN = 13
 BUBBLE_SWITCH = 19
 BUBBLE_SWITCH_2 = 26
@@ -70,7 +69,7 @@ LIGHTS_PIN_ON = 2
 LIGHTS_PIN_OFF = 3
 BAT_PIN = 23
 TOY_PIN = 24
-DOORBELL_PIN = 25
+DOORBELL_PIN = 6
 
 # Trick or Treat object to handle devices
 class TrickOrTreat():
@@ -90,6 +89,8 @@ class TrickOrTreat():
         # self.ghost_button = Button(GHOST_BUTTON_PIN)
         self.treat_button = Button(TREAT_BUTTON_PIN)
         self.trick_button = Button(TRICK_BUTTON_PIN)
+        self.curr_trick_button = False
+        self.curr_treat_button = False
         self.prev_trick_button = False
         self.prev_treat_button = False
         # Setup LEDs
@@ -148,10 +149,10 @@ class TrickOrTreat():
         
     def _handle_tricks(self):
         while self.running:
-            if time.time() < self.trick_end_time:
-                self.trick_led.on()
-            else:
-                self.trick_led.off()
+            # if time.time() < self.trick_end_time:
+            #     self.trick_led.on()
+            # else:
+            #     self.trick_led.off()
             trick = self.current_trick
             if trick is not None:
                 print(f"trick button pressed. Performing trick: {trick}")
@@ -171,20 +172,25 @@ class TrickOrTreat():
                 print(f"Unknown trick: {trick}")
             
     def _bubble_trick(self):
+        self.trick_led.on()
         self.bubble_switch.on()
         self.bubble_switch_2.on()
         while (time.time() - self.trick_end_time) < 0:
             time.sleep(0.01)
         self.bubble_switch.off()
         self.bubble_switch_2.off()
+        self.trick_led.off()
 
     def _ping_pong_trick(self):
+        self.trick_led.on()
         self.ping_pong.on()
         while (time.time() - self.trick_end_time) < 0:
             time.sleep(0.01)
         self.ping_pong.off()
+        self.trick_led.off()
 
     def _toy_trick(self):
+        self.trick_led.on()
         self.toy.on()
         time.sleep(BUTTON_PRESS_DELAY)
         self.toy.off()
@@ -193,14 +199,18 @@ class TrickOrTreat():
         self.toy.on()
         time.sleep(BUTTON_PRESS_DELAY)
         self.toy.off()
+        self.trick_led.off()
 
     def _bat_trick(self):
+        self.trick_led.on()
         self.bat.on()
         while (time.time() - self.trick_end_time) < 0:
             time.sleep(0.01)
         self.bat.off()
+        self.trick_led.off()
 
     def _lights_trick(self):
+        self.trick_led.on()
         while (time.time() - self.trick_end_time) < 0:
             self.lights_off.on()
             time.sleep(BUTTON_PRESS_DELAY)
@@ -210,8 +220,10 @@ class TrickOrTreat():
             time.sleep(BUTTON_PRESS_DELAY)
             self.lights_on.off()
             time.sleep(LIGHTS_TIME)
+        self.trick_led.off()
 
     def _stir_trick(self):
+        self.trick_led.on()
         self.doorbell.on()
         time.sleep(BUTTON_PRESS_DELAY)
         self.doorbell.off()
@@ -219,6 +231,7 @@ class TrickOrTreat():
         while (time.time() - self.trick_end_time) < 0:
             time.sleep(0.01)
         self.stir_motor.stop()
+        self.trick_led.off()
 
     def _sphero_trick2(self):
         self.sphero.setLEDColor(red=255, green=0, blue=0)
@@ -261,12 +274,15 @@ class TrickOrTreat():
         self.trick_thread.start()
         self.treat_thread.start()
         while self.running:
+            self.prev_treat_button = self.curr_treat_button
+            self.prev_trick_button = self.curr_trick_button
+            self.curr_trick_button = self.trick_button.is_pressed
+            self.curr_treat_button = self.treat_button.is_pressed
             treat_pressed = self.prev_treat_button \
-                    and not self.treat_button.is_pressed
+                    and not self.curr_treat_button
             trick_pressed = self.prev_trick_button \
-                    and not self.trick_button.is_pressed
-            self.prev_treat_button = self.treat_button.is_pressed
-            self.prev_trick_button = self.trick_button.is_pressed
+                    and not self.curr_trick_button
+            # print(f"curr: {self.curr_trick_button} prev: {self.prev_trick_button}")
             if time.time() > self.trick_end_time:
                 self.current_trick = None
             if treat_pressed:
