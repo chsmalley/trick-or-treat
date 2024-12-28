@@ -25,11 +25,17 @@ JAM_PIN = 21
 
 
 
-def shoot_dart(trigger: Motor, barrel: Motor) -> None:
+def shoot_dart(trigger: Motor,
+               barrel: Motor,
+               jam_button) -> None:
     barrel.forward(BARREL_SPEED)
-    time.sleep(TRIGGER_DELAY)
+    end_time = time.time() + TRIGGER_DELAY
+    while time.time() < end_time:
+        print(f"trigger state: {jam_button.is_pressed}")
     trigger.forward(TRIGGER_SPEED)
-    time.sleep(TRIGGER_TIME)
+    end_time = time.time() + TRIGGER_TIME
+    while time.time() < end_time:
+        print(f"trigger state: {jam_button.is_pressed}")
     trigger.stop()
     barrel.stop()
 
@@ -39,6 +45,10 @@ def shoot_dart(trigger: Motor, barrel: Motor) -> None:
 
 if __name__ == '__main__':
     # Create Motor objects
+    jam_button = Button(JAM_PIN)
+    door_button = Button(JAM_DOOR_PIN)
+    max_pitch = Button(MAX_PITCH_PIN)
+    min_pitch = Button(MIN_PITCH_PIN)
     trigger_motor = Motor(forward=TRIGGER_MOTOR_FORWARD_PIN,
                           backward=TRIGGER_MOTOR_BACKWARD_PIN)
     barrel_motor = Motor(forward=BARREL_MOTOR_FORWARD_PIN,
