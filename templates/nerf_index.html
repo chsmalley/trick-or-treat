@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Raspberry Pi Camera Stream</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h1>Raspberry Pi Camera Stream</h1>
+    <img src="{{ url_for('video_feed') }}" width="640" height="480">
+    <br>
+    <button id="runScriptButton">Run Script</button>
+    <p id="scriptStatus"></p>
+
+    <script>
+        $(document).ready(function(){
+            $('#runScriptButton').click(function(){
+                $.ajax({
+                    url: '/run_script',
+                    type: 'POST',
+                    success: function(response){
+                        $('#scriptStatus').text(response.status);
+                    },
+                    error: function(error){
+                        $('#scriptStatus').text('Error running script.');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
