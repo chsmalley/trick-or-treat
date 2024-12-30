@@ -35,7 +35,8 @@ def shoot_nerf():
     return jsonify({"status": "Script is running..."})
 
 def shoot_dart():
-    nerf_main()
+    print("shoot nerf")
+    # nerf_main()
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
