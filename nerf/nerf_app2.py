@@ -11,7 +11,6 @@ from aiortc.contrib.media import MediaBlackhole, MediaPlayer, MediaRecorder
 from nerf_shooter import main as nerf_main
 from pitrack import H264EncodedStreamTrack
 from aiortc.rtcrtpparameters import RTCRtpCodecCapability
-from rtcrtpsender import RTCRtpSender
 
 FRAME_RATE = 30
 CAMERA_RESOLUTION = (640, 480)
