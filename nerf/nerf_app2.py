@@ -24,7 +24,7 @@ async def index(request):
     return web.Response(content_type='text/html', text=content)
 
 async def javascript(request):
-    content = open(os.path.join(BASE_PATH, "client.js"), "r").read()
+    content = open(os.path.join(BASE_PATH, "client2.js"), "r").read()
     return web.Response(content_type="application/javascript", text=content)
 
 async def shoot(request):
