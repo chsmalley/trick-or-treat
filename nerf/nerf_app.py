@@ -5,13 +5,14 @@ import os
 import threading
 from collections import OrderedDict
 
+from nerf_shooter import main as nerf_main
 import picamera
 from aiohttp import web
-from aiortc import RTCSessionDescription, RTCPeerConnection
+from aiortc import RTCSessionDescription  # , RTCPeerConnection
 from aiortc.contrib.media import MediaPlayer
 from aiortc.rtcrtpparameters import RTCRtpCodecCapability
 from pitrack import H264EncodedStreamTrack
-from nerf_shooter import main as nerf_main
+from rtcpeerconnection import RTCPeerConnection
 
 logger = logging.getLogger(__name__)
 

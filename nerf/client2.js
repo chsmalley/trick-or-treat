@@ -86,6 +86,16 @@ async function start() {
     // };
 }
 
+function stop() {
+    document.getElementById('stop').style.display = 'none';
+    document.getElementById('start').style.display = 'inline-block';
+
+    // close peer connection
+    setTimeout(function() {
+        pc.close();
+    }, 500);
+}
+
 // document.getElementById('shoot').addEventListener('click', shoot);
 // document.getElementById('start').addEventListener('click', start);
 // window.onload = startStream;
