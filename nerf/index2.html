@@ -9,8 +9,9 @@
     <h1>Raspberry Pi Camera Stream</h1>
     <video id="video" autoplay playsinline></video>
     <br>
-    <button id="shootButton" onclick="shoot()">Shoot</button>
-    <button id="startButton" onclick="startStream()">Start</button>
+    <button id="shoot" onclick="shoot()">Shoot</button>
+    <button id="start" onclick="start()">Start</button>
+    <button id="stop" style="display: none" onclick="stop()">Stop</button>
     <p id="scriptStatus"></p>
     <script src="client2.js"></script>
 </body>

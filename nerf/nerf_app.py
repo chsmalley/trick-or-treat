@@ -2,16 +2,15 @@ import asyncio
 import json
 import logging
 import os
+import threading
 from collections import OrderedDict
 
 import picamera
 from aiohttp import web
-from aiortc import RTCSessionDescription
+from aiortc import RTCSessionDescription, RTCPeerConnection
 from aiortc.contrib.media import MediaPlayer
 from aiortc.rtcrtpparameters import RTCRtpCodecCapability
 from pitrack import H264EncodedStreamTrack
-from rtcpeerconnection import RTCPeerConnection
-from rtcrtpsender import RTCRtpSender
 from nerf_shooter import main as nerf_main
 
 logger = logging.getLogger(__name__)
@@ -42,15 +41,16 @@ async def index(request):
     return web.Response(content_type="text/html", text=content)
 
 
-async def shoot(request):
-    script_thread = threading.Thread(target=nerf_main)
-    script_thread.start()
-    return web.json_response({"status": "shooting nerf dart..."})
-
-
 async def javascript(request):
     content = open(os.path.join(BASE_PATH, "client.js"), "r").read()
     return web.Response(content_type="application/javascript", text=content)
+
+
+async def shoot(request):
+    print("running shoot")
+    script_thread = threading.Thread(target=nerf_main)
+    script_thread.start()
+    return web.json_response({"status": "shooting nerf dart..."})
 
 
 async def offer(request):

@@ -17,7 +17,6 @@ FRAME_RATE = 30
 CAMERA_RESOLUTION = (640, 480)
 BASE_PATH = os.path.dirname(__file__)
 
-audio = None
 camera = None
 
 codec_parameters = OrderedDict(
@@ -61,7 +60,7 @@ async def shoot(request):
     return web.json_response({"status": "shooting nerf dart..."})
 
 async def offer(request):
-    global audio, camera
+    global camera
     params = await request.json()
     offer = RTCSessionDescription(sdp=params["sdp"], type=params["type"])
 
@@ -81,16 +80,6 @@ async def offer(request):
         sei=False,
     )
 
-    # Read audio stream from `hw:1,0` (via alsa, from card1, device0. see output from `arecord -l`)
-    # Please check default Capture volume by `amixer`. You can set Capture volume by `amixer sset 'Capture' 80%`
-    try:
-        audio = MediaPlayer(
-            "hw:1,0", format="alsa", options={"channels": "1", "sample_rate": "44100"}
-        )
-    except:
-        print("Could not open or read audio device.")
-        audio = None
-
     pc = RTCPeerConnection()
     pcs.add(pc)
 
@@ -103,8 +92,6 @@ async def offer(request):
 
     await pc.setRemoteDescription(offer)
     for t in pc.getTransceivers():
-        if t.kind == "audio" and audio and audio.audio:
-            pc.addTrack(audio.audio)
         if t.kind == "video" and video_track:
             t.setCodecPreferences(preferences)
             pc.addTrack(video_track)
@@ -116,6 +103,16 @@ async def offer(request):
             {"sdp": pc.localDescription.sdp, "type": pc.localDescription.type}
         ),
     )
+
+async def on_shutdown(app):
+    global camera
+    # close peer connections
+    print("Shutting down")
+    coros = [pc.close() for pc in pcs]
+    await asyncio.gather(*coros)
+    pcs.clear()
+    camera.stop_recording()
+    camera.close()
 
 
 if __name__ == "__main__":

@@ -1,5 +1,13 @@
 var pc = null;
 
+async function shoot() {
+    const response = await fetch('/shoot', {
+        method: 'POST'
+    });
+    const result = await response.json();
+    document.getElementById('scriptStatus').textContent = result.status;
+}
+
 function negotiate() {
     pc.addTransceiver('video', {direction: 'recvonly'});
     pc.addTransceiver('audio', {direction: 'recvonly'});
