@@ -67,7 +67,7 @@ def main():
     barrel_motor = Motor(forward=BARREL_MOTOR_FORWARD_PIN,
                          backward=BARREL_MOTOR_BACKWARD_PIN)
     pitch_motor = Motor(forward=PITCH_MOTOR_FORWARD_PIN,
-                        backward=PITCH_MOTOR_FORWARD_PIN)
+                        backward=PITCH_MOTOR_BACKWARD_PIN)
     max_pitch = Button(MAX_PITCH_PIN)
     min_pitch = Button(MIN_PITCH_PIN)
     
