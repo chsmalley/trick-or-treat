@@ -1,3 +1,4 @@
+import os
 import cv2
 import threading
 import asyncio
@@ -5,6 +6,8 @@ from aiohttp import web
 from aiortc import RTCPeerConnection, RTCSessionDescription, VideoStreamTrack
 from aiortc.contrib.media import MediaBlackhole, MediaPlayer, MediaRecorder
 from nerf_shooter import main as nerf_main
+
+BASE_PATH = os.path.dirname(__file__)
 
 class CameraStreamTrack(VideoStreamTrack):
     def __init__(self):
