@@ -12,6 +12,7 @@ from aiortc.rtcrtpparameters import RTCRtpCodecCapability
 from pitrack import H264EncodedStreamTrack
 from rtcpeerconnection import RTCPeerConnection
 from rtcrtpsender import RTCRtpSender
+from nerf_shooter import main as nerf_main
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +40,17 @@ pcs = set()
 async def index(request):
     content = open(os.path.join(BASE_PATH, "index.html"), "r").read()
     return web.Response(content_type="text/html", text=content)
+
+
+async def run_script(request):
+    script_thread = threading.Thread(target=your_script_function)
+    script_thread.start()
+    return web.json_response({"status": "Script is running..."})
+
+async def shoot(request):
+    nerf_main()
+    # content = open(os.path.join(BASE_PATH, "client.js"), "r").read()
+    return web.Response(content_type="application/javascript", text=content)
 
 
 async def javascript(request):
@@ -124,4 +136,5 @@ if __name__ == "__main__":
     app.router.add_get("/", index)
     app.router.add_get("/client.js", javascript)
     app.router.add_post("/offer", offer)
+    app.router.add_post("/shoot", shoot)
     web.run_app(app, host="0.0.0.0", port=8080, ssl_context=ssl_context)

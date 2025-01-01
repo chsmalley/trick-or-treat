@@ -41,6 +41,19 @@ function negotiate() {
     });
 }
 
+function shoot() {
+    $.ajax({
+        url: '/run_script',
+        type: 'POST',
+        success: function(response){
+            $('#scriptStatus').text(response.status);
+        },
+        error: function(error){
+            $('#scriptStatus').text('Error running script.');
+        }
+    });
+}
+
 function start() {
     var config = {
         sdpSemantics: 'unified-plan'
