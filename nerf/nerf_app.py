@@ -42,15 +42,10 @@ async def index(request):
     return web.Response(content_type="text/html", text=content)
 
 
-async def run_script(request):
-    script_thread = threading.Thread(target=your_script_function)
-    script_thread.start()
-    return web.json_response({"status": "Script is running..."})
-
 async def shoot(request):
-    nerf_main()
-    # content = open(os.path.join(BASE_PATH, "client.js"), "r").read()
-    return web.Response(content_type="application/javascript", text=content)
+    script_thread = threading.Thread(target=nerf_main)
+    script_thread.start()
+    return web.json_response({"status": "shooting nerf dart..."})
 
 
 async def javascript(request):

@@ -1,5 +1,5 @@
-async function runScript() {
-    const response = await fetch('/run_script', {
+async function shoot() {
+    const response = await fetch('/shoot', {
         method: 'POST'
     });
     const result = await response.json();
@@ -26,5 +26,5 @@ async function startStream() {
     };
 }
 
-document.getElementById('runScriptButton').addEventListener('click', runScript);
+document.getElementById('shootButton').addEventListener('click', shoot);
 window.onload = startStream;

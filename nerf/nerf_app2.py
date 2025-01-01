@@ -23,7 +23,12 @@ async def index(request):
     content = open('index2.html', 'r').read()
     return web.Response(content_type='text/html', text=content)
 
+async def javascript(request):
+    content = open(os.path.join(BASE_PATH, "client.js"), "r").read()
+    return web.Response(content_type="application/javascript", text=content)
+
 async def shoot(request):
+    print("running shoot")
     script_thread = threading.Thread(target=nerf_main)
     script_thread.start()
     return web.json_response({"status": "shooting nerf dart..."})
@@ -49,13 +54,12 @@ async def offer(request):
         'type': pc.localDescription.type
     })
 
-def your_script_function():
-    # Your Python script logic here
-    print("Script is running...")
 
-app = web.Application()
-app.router.add_get('/', index)
-app.router.add_post('/offer', offer)
-app.router.add_post('/run_script', run_script)
+if __name__ == "__main__":
+    app = web.Application()
+    app.router.add_get('/', index)
+    app.router.add_get("/client2.js", javascript)
+    app.router.add_post('/offer', offer)
+    app.router.add_post('/shoot', shoot)
 
-web.run_app(app, port=8080)
+    web.run_app(app, port=8080)
