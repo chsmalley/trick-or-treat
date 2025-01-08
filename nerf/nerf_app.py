@@ -50,11 +50,11 @@ class CameraStreamTrack(VideoStreamTrack):
         return VideoFrame.from_ndarray(frame, format="rgb24")
 
 async def index(request):
-    content = open('index2.html', 'r').read()
+    content = open('index.html', 'r').read()
     return web.Response(content_type='text/html', text=content)
 
 async def javascript(request):
-    content = open(os.path.join(BASE_PATH, "client2.js"), "r").read()
+    content = open(os.path.join(BASE_PATH, "client.js"), "r").read()
     return web.Response(content_type="application/javascript", text=content)
 
 async def shoot(request):
@@ -122,7 +122,7 @@ async def on_shutdown(app):
 if __name__ == "__main__":
     app = web.Application()
     app.router.add_get('/', index)
-    app.router.add_get("/client2.js", javascript)
+    app.router.add_get("/client.js", javascript)
     app.router.add_post('/offer', offer)
     app.router.add_post('/shoot', shoot)
 
