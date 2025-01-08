@@ -3,19 +3,19 @@ import time
 
 # CONSTANTS
 BARREL_SPEED = 0.5
-TRIGGER_SPEED = 0.5
-TRIGGER_DELAY = 0.2
-TRIGGER_TIME = 0.5
+TRIGGER_SPEED = 0.4
+TRIGGER_DELAY = 0.4
+TRIGGER_TIME = 0.7
 PITCH_SPEED = 0.5
 PITCH_TIME = 0.5
 
 # GPIO PINS
-TRIGGER_MOTOR_FORWARD_PIN = 17
-TRIGGER_MOTOR_BACKWARD_PIN = 18
-PITCH_MOTOR_FORWARD_PIN = 23
-PITCH_MOTOR_BACKWARD_PIN = 24
-BARREL_MOTOR_FORWARD_PIN = 7
-BARREL_MOTOR_BACKWARD_PIN = 8
+TRIGGER_MOTOR_FORWARD_PIN = 23
+TRIGGER_MOTOR_BACKWARD_PIN = 24
+PITCH_MOTOR_FORWARD_PIN = 14
+PITCH_MOTOR_BACKWARD_PIN = 15
+BARREL_MOTOR_FORWARD_PIN = 27
+BARREL_MOTOR_BACKWARD_PIN = 22
 # PITCH PINS
 MAX_PITCH_PIN = 2
 MIN_PITCH_PIN = 3
@@ -27,12 +27,14 @@ JAM_PIN = 21
 def shoot_dart(trigger: Motor,
                barrel: Motor,
                jam_button) -> None:
-    barrel.forward(BARREL_SPEED)
+    barrel.backward(BARREL_SPEED)
+    # Give some time for barrel motor to start
     end_time = time.time() + TRIGGER_DELAY
     while time.time() < end_time:
         print(f"trigger state: {jam_button.is_pressed}")
         time.sleep(0.1)
     trigger.forward(TRIGGER_SPEED)
+    # Shoot pin
     end_time = time.time() + TRIGGER_TIME
     while time.time() < end_time:
         print(f"trigger state: {jam_button.is_pressed}")
@@ -71,10 +73,10 @@ def main():
     
     print("Nerf shooter")
     shoot_dart(trigger_motor, barrel_motor, jam_button)
-    print("raise pitch")
-    raise_motor(pitch_motor, max_pitch)
-    print("lower pitch")
-    lower_motor(pitch_motor, min_pitch)
+    # print("raise pitch")
+    # raise_motor(pitch_motor, max_pitch)
+    # print("lower pitch")
+    # lower_motor(pitch_motor, min_pitch)
     print("\ngoodbye")
 
 
