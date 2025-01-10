@@ -6,6 +6,7 @@ BARREL_SPEED = 0.5
 TRIGGER_SPEED = 0.4
 TRIGGER_DELAY = 0.4
 TRIGGER_TIME = 0.7
+TRIGGER_TIMEOUT = 2
 PITCH_SPEED = 0.5
 PITCH_TIME = 0.5
 
@@ -28,19 +29,26 @@ def shoot_dart(trigger: Motor,
                barrel: Motor,
                jam_button) -> None:
     barrel.backward(BARREL_SPEED)
+    nerf_shot = False
     # Give some time for barrel motor to start
     end_time = time.time() + TRIGGER_DELAY
     while time.time() < end_time:
-        print(f"trigger state: {jam_button.is_pressed}")
         time.sleep(0.1)
     trigger.forward(TRIGGER_SPEED)
     # Shoot pin
-    end_time = time.time() + TRIGGER_TIME
-    while time.time() < end_time:
+    timeout_time = time.time() + TRIGGER_TIMEOUT
+    prev_trigger_pos = False
+    curr_trigger_pos = False
+    while not nerf_shot and time.time() < timeout_time:
         print(f"trigger state: {jam_button.is_pressed}")
+        prev_trigger_pos = curr_trigger_pos
+        curr_trigger_pos = jam_button.is_pressed
+        if not curr_trigger_pos and prev_trigger_pos:
+            nerf_shot = True
         time.sleep(0.1)
     trigger.stop()
     barrel.stop()
+    # time.sleep(0.3)
 
 def raise_motor(pitch: Motor, max_pitch: Button) -> None:
     stop_time = time.time() + PITCH_TIME
@@ -77,7 +85,7 @@ def main():
     # raise_motor(pitch_motor, max_pitch)
     # print("lower pitch")
     # lower_motor(pitch_motor, min_pitch)
-    print("\ngoodbye")
+    # print("\ngoodbye")
 
 
 if __name__ == '__main__':
