@@ -8,22 +8,19 @@
 // standard IRremote payload
 union magiquest {
   uint64_t llword;
-  uint8_t    byte[8];
-  uint32_t  lword[2];
+  uint8_t byte[8];
+  uint32_t lword[2];
   struct {
     uint16_t magnitude;
     uint32_t wand_id;
-    uint8_t  padding;
-    uint8_t  scrap;
+    uint8_t padding;
+    uint8_t scrap;
   } cmd ;
-} ;
+};
 
 
 void setup() {
-
-  // Let's use comms for debug
   Serial.begin(9600);
-  
   while (!Serial) {
     ;
   }
@@ -35,28 +32,36 @@ void setup() {
 }
 
 void loop() {
-  
-  // Serial.print("reading wand");
   // Wait and decode
   if (IrReceiver.decode()) {
     // translate the bit stream into something we can use
     // to understand a MagiQuest wand
-    IrReceiver.resume(); // Early enable receiving of the next IR frame
     // IrReceiver.printIRResultShort(&Serial);
     // IrReceiver.printIRSendUsage(&Serial);
     // decodeMagiQuest(&results, &data);
-    if (IrReceiver.decodedIRData.address == 56705) {
-      Serial.println("HELLO CAMILLA");
-    }
-    if (IrReceiver.decodedIRData.address == 60929) {
-      Serial.println("HELLO JULIET");
-    }
-    // Serial.print("extra: ");
-    // Serial.println(IrReceiver.decodedIRData.extra);
-    // Serial.print("command: ");
-    // Serial.println(IrReceiver.decodedIRData.command);
-    // Serial.print("address: ");
-    // Serial.println(IrReceiver.decodedIRData.address);
+    // if (IrReceiver.decodedIRData.address == 56705) {
+    //   Serial.println("HELLO CAMILLA");
+    // }
+    // if (IrReceiver.decodedIRData.address == 60929) {
+    //   Serial.println("HELLO JULIET");
+    // }
+
+    String protocol = IrReceiver.getProtocolString();
+    uint16_t address = IrReceiver.decodedIRData.address;
+    uint16_t extra = IrReceiver.decodedIRData.extra;
+    uint16_t command = IrReceiver.decodedIRData.command;
+    unsigned long value = IrReceiver.decodedIRData.decodedRawData;
+
+    // Send the data in JSON-like string
+    Serial.print("{\"protocol\":\"");
+    Serial.print(protocol);
+    Serial.print("\",\"address\":");
+    Serial.println(address);
+    Serial.print(",\"extra\":");
+    Serial.println(extra);
+    Serial.print(",\"command\":");
+    Serial.println(command);
+    Serial.println("}");
 
     // keep receiving data 
     IrReceiver.resume();
