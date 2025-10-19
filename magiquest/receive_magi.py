@@ -1,7 +1,12 @@
 import serial
 import json
 
-# Change COM port as needed (e.g., 'COM3' on Windows or '/dev/ttyUSB0' on Linux)
+KNOWN_WANDS = {
+    56705: "Camilla",
+    60929: "Juliet"
+}
+
+
 ser = serial.Serial('/dev/ttyUSB0', 9600)
 
 while True:
@@ -10,6 +15,8 @@ while True:
         if line.startswith('{') and line.endswith('}'):
             data = json.loads(line)
             print("Received:", data)
+            if data["address"] in KNOWN_WANDS.keys():
+                print(f"Hello {KNOWN_WANDS[data["address"]]}")
     except json.JSONDecodeError as e:
         print("JSON decode error:", e)
     except KeyboardInterrupt:

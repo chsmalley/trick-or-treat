@@ -1,7 +1,32 @@
 #include <IRremote.hpp> // include the library
-#define IR_RECEIVE_PIN A0
+// #include <IRremote.h>
 
 #define DECODE_MAGIQUEST
+
+const int irPins[4] = {2, 3, 4, 5};
+IRrecv* irReceivers[4];
+decode_results results;
+
+void setup() {
+  Serial.begin(9600);
+
+  for (int i = 0; i < 4; i++) {
+    irReceivers[i] = new IRrecv(irPins[i]);
+    irReceivers[i]->enableIRIn();  // Start the receiver
+    // turn on IR receiver
+    IrReceiver.begin(IR_RECEIVE_PIN, ENABLE_LED_FEEDBACK);
+  }
+}
+
+void loop() {
+  for (int i = 0; i < 4; i++) {
+    if (irReceivers[i]->decode()) {
+      Serial.println(i);  // Send which receiver got the signal
+      irReceivers[i]->resume();  // Receive the next signal
+      delay(200);  // Debounce to avoid multiple triggers
+    }
+  }
+}
 
 
 // The magiquest payload is a bit different from the
@@ -34,17 +59,6 @@ void setup() {
 void loop() {
   // Wait and decode
   if (IrReceiver.decode()) {
-    // translate the bit stream into something we can use
-    // to understand a MagiQuest wand
-    // IrReceiver.printIRResultShort(&Serial);
-    // IrReceiver.printIRSendUsage(&Serial);
-    // decodeMagiQuest(&results, &data);
-    // if (IrReceiver.decodedIRData.address == 56705) {
-    //   Serial.println("HELLO CAMILLA");
-    // }
-    // if (IrReceiver.decodedIRData.address == 60929) {
-    //   Serial.println("HELLO JULIET");
-    // }
 
     String protocol = IrReceiver.getProtocolString();
     uint16_t address = IrReceiver.decodedIRData.address;
@@ -66,6 +80,7 @@ void loop() {
     // keep receiving data 
     IrReceiver.resume();
   }
+
   // wait a bit, and then back to receiving and decoding
   delay(100);
 }
